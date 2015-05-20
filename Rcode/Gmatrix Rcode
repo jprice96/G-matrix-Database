@@ -10,16 +10,39 @@ num.of.files = length(matrix.files)
 #This creates a blank list
 all.matrices = list()
 
-#This is a loop which goes through the files and extracts the matrices in matrix.list
-for(i in 1:num.of.files){
-  all.matrices[[i]] = read.csv(matrix.files[i])
-}
-
 #This creates a list of matrix names minus the .csv
 matrix.names = list()
 for(i in 1:num.of.files){
   matrix.names[i] = gsub(".csv", "", matrix.files[i])
 }
 
+#This is a loop which goes through the files and extracts the matrices in matrix.list
+for(i in 1:num.of.files){
+  all.matrices[[i]] = read.csv(matrix.files[i])
+}
+
 #This names all of the matrices by their author, year and pop
 names(all.matrices) = matrix.names
+
+#Calculation of Gmax and other eigen values
+matrix.parameters = data.frame(matrix(ncol=10), stringsAsFactors=FALSE)
+
+#Determines the highest number of eigenvalues produced by a matrix
+#This may be removed if we decide on a hard limit for how many eigenvalues we wish to see
+n.row = list()
+for (i in 1:length(all.matrices)){
+  temp = eigen(all.matrices[[i]], TRUE)
+  for (j in 1:length(temp$values)){
+    n.row[j] = temp$values[j]
+  }
+}
+
+#This creates a matrix consisting of the matrix name and its eigenvalues
+matrix.parameters = matrix(ncol=length(n.row)+1, nrow=length(all.matrices))
+for (i in 1:length(all.matrices)){
+  matrix.parameters[i,1] = names(all.matrices[i])
+  temp = eigen(all.matrices[[i]], TRUE)
+  for (j in 1:length(temp$values)){
+    matrix.parameters[i,j+1] = temp$values[j]
+  }
+}
