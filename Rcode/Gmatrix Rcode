@@ -1,16 +1,25 @@
 #This identifies which directory we are looking at
-setwd("c:/Users/Jack/Desktop/GData/cov")
+setwd("directory path here")
 
 #This creates a list of all of the files in the directory
-matrix.files = dir()
+matrix.files = dir(pattern="*csv")
 
 #This is the number of files/matrices we have
 num.of.files = length(matrix.files)
 
 #This creates a blank list
-matrix.list = list()
+all.matrices = list()
 
 #This is a loop which goes through the files and extracts the matrices in matrix.list
 for(i in 1:num.of.files){
-  matrix.list[[i]] = read.csv(matrix.files[i])
-  }
+  all.matrices[[i]] = read.csv(matrix.files[i])
+}
+
+#This creates a list of matrix names minus the .csv
+matrix.names = list()
+for(i in 1:num.of.files){
+  matrix.names[i] = gsub(".csv", "", matrix.files[i])
+}
+
+#This names all of the matrices by their author, year and pop
+names(all.matrices) = matrix.names
