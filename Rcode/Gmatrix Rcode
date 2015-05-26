@@ -28,25 +28,17 @@ for(i in 1:num.of.files){
 #This names all of the matrices by their author, year and pop
 names(all.matrices) = matrix.names
 
-#Calculation of Gmax and other eigen values
-matrix.parameters = data.frame(matrix(ncol=10), stringsAsFactors=FALSE)
+#Creates empty lists for value input
+Pop.ID = numeric(num.of.files)
+Gmax = numeric(num.of.files)
 
-#Determines the highest number of eigenvalues produced by a matrix
-#This may be removed if we decide on a hard limit for how many eigenvalues we wish to see
-n.row = list()
-for (i in 1:length(all.matrices)){
-  temp = eigen(all.matrices[[i]], TRUE)
-  for (j in 1:length(temp$values)){
-    n.row[j] = temp$values[j]
-  }
+#Calculates and identifies parameters for all of the matrices
+for (i in 1:num.of.files){
+  Pop.ID[i] = matrix.names[[i]]
+  tmp.matrix = all.matrices[[i]]
+  tmp.values = eigen(tmp.matrix)
+  Gmax[i] = tmp.values$values[1]
 }
 
-#This creates a matrix consisting of the matrix name and its eigenvalues
-matrix.parameters = matrix(ncol=length(n.row)+1, nrow=length(all.matrices))
-for (i in 1:length(all.matrices)){
-  matrix.parameters[i,1] = names(all.matrices[i])
-  temp = eigen(all.matrices[[i]], TRUE)
-  for (j in 1:length(temp$values)){
-    matrix.parameters[i,j+1] = temp$values[j]
-  }
-}
+#Collates all the calculated parameters into a single data frame
+summary.parameters = data.frame(Pop.ID, Gmax)
