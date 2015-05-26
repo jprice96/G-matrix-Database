@@ -1,5 +1,9 @@
-#This identifies which directory we are looking at
-setwd("directory path here")
+#Downloads and unzips the G-matrix Data repository from GitHub
+download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
+unzip("cov_matrices.zip")
+
+#Resets working directory from My Documents to downloaded Cov_matrices folder
+setwd("G-matrix-Database-master/Cov_matrices")
 
 #This creates a list of all of the files in the directory
 matrix.files = dir(pattern="*csv")
