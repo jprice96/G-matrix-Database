@@ -1,6 +1,6 @@
 #Downloads and unzips the G-matrix Data repository from GitHub
 download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
-unzip("cov_matrices.zip")
+unzip("GData-repository.zip")
 
 #Resets working directory from My Documents to downloaded Cov_matrices folder
 setwd("G-matrix-Database-master/Cov_matrices")
