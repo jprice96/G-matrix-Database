@@ -49,6 +49,33 @@ for (i in 1:length(paper)){
 }
 
 
+#Grouping datasets based on sub-pops  Attempt#2
+populations = list()
+for (i in 1:length(file.names)){
+  populations[i] = strsplit(as.character(file.names[i]), split"_")
+  }
+
+data.groups = list()
+for (i in 1:length(populations)){
+  new.pop = TRUE
+  for (j in 1:length(data.groups)){
+    if (data.groups[[j]] = populations[[i]][1]){
+      new.pop = FALSE
+    }
+  }
+  if (new.pop = TRUE){
+    pop.name = objects(input.data, pattern=as.character(populations[[i]][1]));
+    data.groups[i] = pop.name
+    }
+  }
+}
+
+
+############################THE FUNCTION I AM LOOKING FOR IS get()#################################
+
+
+
+
 #Grouping datasets based on sub-pops  Attempt#1
 datasets2=list()
 for (i in 1:ncol(datasets)){
@@ -77,7 +104,7 @@ for (i in 1:ncol(datasets)){
 }
 
 
-#Grouping datasets based on sub-pops  Attempt#2
+
 
 #Extracting just the G-matrices
 G.matrices = list()
