@@ -1,44 +1,87 @@
 #Downloads and unzips the G-matrix Data repository from GitHub
 download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
-unzip("GData-repository.zip")
+unzip("cov_matrices.zip")
 
 #Resets working directory from My Documents to downloaded Cov_matrices folder
 setwd("G-matrix-Database-master/Cov_matrices")
 
 #This creates a list of all of the files in the directory
-matrix.files = dir(pattern="*csv")
+data.files = dir(pattern="*csv")
 
 #This is the number of files/matrices we have
-num.of.files = length(matrix.files)
+num.of.files = length(data.files)
 
 #This creates a blank list
-all.matrices = list()
+input.data = list()
 
-#This creates a list of matrix names minus the .csv
-matrix.names = list()
+#This creates a list of file names minus the .csv
+file.names = list()
 for(i in 1:num.of.files){
-  matrix.names[i] = gsub(".csv", "", matrix.files[i])
+  file.names[i] = gsub(".csv", "", data.files[i])
 }
 
-#This is a loop which goes through the files and extracts the matrices in matrix.list
+col.names = list("trait", "trait.mean", "var(P)")
+#This is a loop which goes through the files and converts the data
 for(i in 1:num.of.files){
-  all.matrices[[i]] = read.csv(matrix.files[i])
+  input.data[[i]] = read.csv(data.files[i], header=FALSE)
+  colnames(input.data[[i]]) = col.names
 }
 
-#This names all of the matrices by their author, year and pop
-names(all.matrices) = matrix.names
+#This names all of the files by their author, year and pop
+names(input.data) = file.names
 
-#Creates empty lists for value input
-Pop.ID = numeric(num.of.files)
-Gmax = numeric(num.of.files)
+#Identifying all papers - !!NOTE!! The paper is identified through any text prior to the first "_" found in the file name
+paper = list()
+for (i in 1:length(file.names)){
+  paper[i] = strsplit(as.character(file.names[i]), split="_")
+}
 
-#Calculates and identifies parameters for all of the matrices
+#Grouping data into datasets based on paper
+datasets = data.frame()
+datasets[1,1] = 0
+for (i in 1:length(paper)){
+  tmp = paper[[i]][1]
+  if (datasets[1,] != tmp){
+    datasets[1,i] = paper[[i]][1];
+    temp = objects(input.data, pattern=as.character(paper[[i]][1]));
+    datasets[2:(length(temp)+1),i] = temp
+  }
+}
+
+
+#Grouping datasets based on sub-pops  Attempt#1
+datasets2=list()
+for (i in 1:ncol(datasets)){
+  pop.name = strsplit(as.character(datasets[2,i]), split="_")
+  if (length(pop.name[[1]]) == 3){
+    subgroups = data.frame();
+    subgroups[1,1] = 0;
+    pop.names = list();
+    for (k in 1:(length(datasets[,i])-1)){
+      pop.names[k] = strsplit(as.character(datasets[(k+1),i]), split="_")
+    };
+    for (k in 1:length(pop.names)){
+      tmp = pop.names[[k]][3]
+      if (subgroups[1,] != tmp){
+        subgroups[1,k] = pop.names[[k]][3];
+        t.mp = datasets[,i];
+        temp = grep(pattern=as.character(pop.names[[k]][3]), x=t.mp, value=TRUE);
+        subgroups[2:(length(temp)+1),k] = temp
+      };
+    };
+    datasets2[[i]] = subgroups
+  }
+  if (length(pop.name[[1]]) == 2){
+    datasets2[[i]] = datasets[,i]
+  }
+}
+
+
+#Grouping datasets based on sub-pops  Attempt#2
+
+#Extracting just the G-matrices
+G.matrices = list()
 for (i in 1:num.of.files){
-  Pop.ID[i] = matrix.names[[i]]
-  tmp.matrix = all.matrices[[i]]
-  tmp.values = eigen(tmp.matrix)
-  Gmax[i] = tmp.values$values[1]
+  G.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
 }
-
-#Collates all the calculated parameters into a single data frame
-summary.parameters = data.frame(Pop.ID, Gmax)
+names(G.matrices) = file.names
