@@ -1,10 +1,3 @@
-#Downloads and unzips the G-matrix Data repository from GitHub
-download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
-unzip("cov_matrices.zip")
-
-#Resets working directory from My Documents to downloaded Cov_matrices folder
-setwd("G-matrix-Database-master/Cov_matrices")
-
 #This creates a list of all of the files in the directory
 data.files = dir(pattern="*csv")
 
@@ -61,6 +54,36 @@ for (i in 1:num.of.files){
 }
 names(G.matrices) = file.names
 
+#Creating correlation matrices
+
+c.matrices = list()
+for(i in 1:length(G.matrices)){
+  corr.mat = G.matrices[[i]]
+  diag = list()
+  for(j in 1:ncol(corr.mat)){
+    diag[j] = corr.mat[j,j]
+  }
+  for(j in 1:length(diag)){
+    for(k in 1:length(diag)){
+      corr.mat[j,k] = corr.mat[j,k] / (sqrt(diag[[j]]*diag[[k]]))
+    }
+  }
+  c.matrices[[i]] = corr.mat
+}
+names(c.matrices) = file.names
+
+
+#Mean standardize
+xstd.mat = list()
+for(i in 1:length(G.matrices)){
+  means = list()
+  means = input.data[[i]][,2]
+  xstd.mat[[i]]= as.data.frame(G.matrices[i]) / (means %*% t(means))
+}
+names(xstd.mat) = file.names
+
+#ANALYSIS W/ "G.matrices"
+
 #Analysis of matrix size
 size.comp = list()
 size.comp[[1]] = 0
@@ -79,10 +102,9 @@ for (i in 1:2){
 }
 detach(G.matrices)
 
-
 #Create boxplot of size comparison
 boxplot(size.comp, names=anc.nov)
-title(main="Size_comparison", ylab="Matrix size")
+title(main="Size_comparison (G)", ylab="Matrix size")
 
 
 #Analysis of variance distribution
@@ -116,7 +138,7 @@ detach(G.matrices)
 
 #Create boxplot of vector comparison
 boxplot(x=c(anc.vectors, nov.vectors), names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
-title(main="Distribution of variance", xlab="Eigenvectors", ylab="Va / Vtotal")
+title(main="Distribution of variance (G)", xlab="Eigenvectors", ylab="Va / Vtotal")
 
 
 
@@ -145,4 +167,93 @@ detach(G.matrices)
 
 #Create boxplot of vector projection
 boxplot(x=c(anc.vectors, nov.vectors), names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
-title(main="Projection of ANC vectors into NOV G", xlab="Eigenvectors", ylab="Va / Vtotal")
+title(main="Projection of ANC vectors into NOV G (G)", xlab="Eigenvectors", ylab="Va / Vtotal")
+
+
+
+
+#ANALYSIS W/ "xstd.mat"
+
+#Analysis of matrix size (w/ xstd.mat)
+size.comp = list()
+size.comp[[1]] = 0
+size.comp[[2]] = 0
+anc.nov = c("ANC", "NOV")
+Gmat = list()
+attach(xstd.mat)
+for (i in 1:2){
+  Gmat.sort = objects(xstd.mat, pattern=as.character(anc.nov[i]))
+  for (j in 1:length(Gmat.sort)){
+    Gmat = get(Gmat.sort[j])
+    Eign.Gmat = eigen(Gmat)
+    eign.Gmat = Eign.Gmat$values
+    size.comp[[i]][j] = sum(eign.Gmat)
+  }
+}
+detach(xstd.mat)
+
+#Create boxplot of size comparison
+boxplot(size.comp, names=anc.nov)
+title(main="Size_comparison (xstd)", ylab="Matrix size")
+
+#Analysis of variance distribution
+anc.vectors = list()
+anc.vectors[1:2] = 0
+nov.vectors = list()
+nov.vectors[1:2] = 0
+
+Gmat = list()
+attach(xstd.mat)
+for (i in 1:2){
+  Gmat.sort = objects(xstd.mat, pattern=as.character(anc.nov[i]))
+  for (j in 1:length(Gmat.sort)){
+    Gmat = get(Gmat.sort[j])
+    Eign.Gmat = eigen(Gmat)
+    eign.Gmat = Eign.Gmat$values
+    sumvalues = sum(eign.Gmat)
+    if(i==1){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        anc.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+    if(i==2){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        nov.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+  }
+}
+detach(xstd.mat)
+
+#Create boxplot of vector comparison
+boxplot(x=c(anc.vectors, nov.vectors), names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
+title(main="Distribution of variance (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
+
+
+
+# Vector projection
+anc.vectors = list()
+anc.vectors[1:2] = 0
+nov.vectors = list()
+nov.vectors[1:2] = 0
+
+attach(xstd.mat)
+for(i in 1:length(data.groups[1,])){
+  mat.ANC = get(data.groups[2,i])
+  mat.NOV = get(data.groups[3,i])
+  eig.ANC = eigen(mat.ANC)
+  val.ANC = eig.ANC$values
+  vec.ANC = eig.ANC$vectors
+  project = mat.NOV*vec.ANC
+  eig.NOV = eigen(project)
+  val.NOV = eig.NOV$values
+  for(j in 1:length(val.ANC)){
+    anc.vectors[[j]][i] = val.ANC[j]
+    nov.vectors[[j]][i] = val.NOV[j]
+  }
+}
+detach(xstd.mat)
+
+#Create boxplot of vector projection
+boxplot(x=c(anc.vectors, nov.vectors), names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
+title(main="Projection of ANC vectors into NOV G (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
