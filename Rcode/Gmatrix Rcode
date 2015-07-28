@@ -1,41 +1,32 @@
 #Downloads and unzips the G-matrix Data repository from GitHub
 download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
 unzip("cov_matrices.zip")
-
 #Resets working directory from My Documents to downloaded Cov_matrices folder
 setwd("G-matrix-Database-master/Cov_matrices")
-
 #This creates a list of all of the files in the directory
 data.files = dir(pattern="*csv")
-
 #This is the number of files/matrices we have
 num.of.files = length(data.files)
-
 #This creates a blank list
 input.data = list()
-
 #This creates a list of file names minus the .csv
 file.names = list()
 for(i in 1:num.of.files){
   file.names[i] = gsub(".csv", "", data.files[i])
 }
 col.names = list("trait", "trait.mean", "var(P)")
-
 #This is a loop which goes through the files and converts the data
 for(i in 1:num.of.files){
   input.data[[i]] = read.csv(data.files[i], header=FALSE)
   colnames(input.data[[i]]) = col.names
 }
-
 #This names all of the files by their author, year and pop
 names(input.data) = file.names
-
 #Sorting by sub-pop
 populations = list()
 for (i in 1:length(file.names)){
   populations[i] = strsplit(as.character(file.names[i]), split="_")
 }
-
 data.groups = data.frame()
 data.groups[1,1] = 0
 n = 1
@@ -53,16 +44,13 @@ for (i in 1:length(populations)){
     n = n + 1
   }
 }
-
 #Extracting just the G-matrices
 G.matrices = list()
 for (i in 1:num.of.files){
   G.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
 }
 names(G.matrices) = file.names
-
 #Creating correlation matrices
-
 c.matrices = list()
 for(i in 1:length(G.matrices)){
   corr.mat = G.matrices[[i]]
@@ -78,19 +66,16 @@ for(i in 1:length(G.matrices)){
   c.matrices[[i]] = corr.mat
 }
 names(c.matrices) = file.names
-
-
-#Mean standardize
+#Mean standardize (actually heritability stdize)   ###STANDARDIZE DOES NOT WORK###
 xstd.mat = list()
 for(i in 1:length(G.matrices)){
-  means = list()
-  means = input.data[[i]][,2]
-  xstd.mat[[i]]= as.data.frame(G.matrices[i]) / (means %*% t(means))
+  heritability = list()
+  for (j in 1:length(G.matrices[[i]][,1])){
+    heritability[j] = G.matrices[[i]][j,j] / input.data[[i]][,3]
+  }
+  xstd.mat[[i]]= as.data.frame(G.matrices[i]) / (heritability %*% t(heritability))
 }
 names(xstd.mat) = file.names
-
-
-
 #Analysis of matrix size (w/ xstd.mat)
 size.comp = list()
 size.comp[[1]] = 0
@@ -108,20 +93,14 @@ for (i in 1:2){
   }
 }
 detach(xstd.mat)
-
 #Create boxplot of size comparison
 boxplot(size.comp, names=anc.nov)
 title(main="Size_comparison (xstd)", ylab="Matrix size")
-
-
-
-
 #Analysis of variance distribution
 anc.vectors = list()
 anc.vectors[1:2] = 0
 nov.vectors = list()
 nov.vectors[1:2] = 0
-
 Gmat = list()
 attach(xstd.mat)
 for (i in 1:2){
@@ -144,7 +123,6 @@ for (i in 1:2){
   }
 }
 detach(xstd.mat)
-
 combined.vectors = list()
 j=1
 k=1
@@ -158,20 +136,14 @@ for(i in 1:(length(anc.vectors) * 2)){
     k=k+1
   }
 }
-
 #Create boxplot of vector comparison
 boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
 title(main="Distribution of variance (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
-
-
-
-
 # Vector projection
 anc.vectors = list()
 anc.vectors[1:2] = 0
 nov.vectors = list()
 nov.vectors[1:2] = 0
-
 attach(xstd.mat)
 for(i in 1:length(data.groups[1,])){
   mat.ANC = get(data.groups[2,i])
@@ -179,11 +151,7 @@ for(i in 1:length(data.groups[1,])){
   eig.ANC = eigen(mat.ANC)
   val.ANC = eig.ANC$values
   vec.ANC = eig.ANC$vectors[,1]
-  
-  
   project = mat.NOV*vec.ANC
-  
-  
   eig.NOV = eigen(project)
   val.NOV = eig.NOV$values
   for(j in 1:length(val.ANC)){
@@ -192,10 +160,6 @@ for(i in 1:length(data.groups[1,])){
   }
 }
 detach(xstd.mat)
-
-
-
-
 combined.vectors = list()
 j=1
 k=1
@@ -209,18 +173,10 @@ for(i in 1:(length(anc.vectors) * 2)){
     k=k+1
   }
 }
-
-
 #Create boxplot of vector projection
 boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
 title(main="Projection of ANC vectors into NOV G (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
-
-
-
-
 #ATTEMPT 2: Vector projection
-
-
 attach(xstd.mat)
 x = length(data.groups[1,])
 anc.z = list()
@@ -244,7 +200,5 @@ for (i in 1:length(data.groups[,1])){
   }
 }
 detach(xstd.mat)
-
-#What am I then plotting? This (above) produces two lists of z or response vectors (anc.z and nov.z), 
+#What am I then plotting? This (above) produces two lists of z or response vectors (anc.z and nov.z),
 #what do I do with these to produce a plot?
-
