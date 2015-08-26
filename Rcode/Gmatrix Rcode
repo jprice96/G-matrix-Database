@@ -19,7 +19,7 @@ file.names = list()
 for(i in 1:num.of.files){
   file.names[i] = gsub(".csv", "", data.files[i])
 }
-col.names = list("trait", "trait.mean", "var(P)")
+col.names = list("trait", "trait.mean", "heritability")
 
 #This is a loop which goes through the files and converts the data
 for(i in 1:num.of.files){
@@ -53,6 +53,42 @@ for (i in 1:length(populations)){
     n = n + 1
   }
 }
+
+###################################EDIT BEGIN#################################
+mix.matrices = list()
+for (i in 1:num.of.files){
+  mix.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
+}
+names(mix.matrices) = file.names
+
+G.matrices = list()
+k=1
+for (i in 1:num.of.files){
+  if(mix.matrices[[i]][1,1]!="NULL"){
+    lth = length(mix.matrices[[i]][1,]
+    for (j in 1:lth)){
+      G.matrices[[k]][j:lth,j] = mix.matrices[[i]][j:lth,j]
+      G.matrices[[k]][j,j:lth] = mix.matrices[[i]][j:lth,j]
+      k = k+1
+    }
+  }
+}
+
+C.matrices = list()
+for (i in 1:num.of.files){
+  lth = length(mix.matrices[[i]][1,]){
+    for (j in 1:lth){
+      C.matrices[[i]][j:lth,j] = mix.matrices[[i]][j,j:lth]
+      C.matrices[[i]][j,j:lth] = mix.matrices[[i]][j,j:lth]
+      C.matrices[[i]][j,j] = 1
+    }
+  }
+}
+
+############################EDIT END########################################
+
+
+
 
 #Extracting just the G-matrices
 G.matrices = list()
