@@ -54,66 +54,49 @@ for (i in 1:length(populations)){
   }
 }
 
-###################################EDIT BEGIN#################################
+
+
+# Extracting mixed (co)variance - correlation matrices
 mix.matrices = list()
 for (i in 1:num.of.files){
   mix.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
 }
 names(mix.matrices) = file.names
 
+#Extracting (co)variance matrices
 G.matrices = list()
-k=1
+G.matrices[[1]] = 0
+G.matrices[[2]] = 0
+k =1
 for (i in 1:num.of.files){
   if(mix.matrices[[i]][1,1]!="NULL"){
-    lth = length(mix.matrices[[i]][1,]
-    for (j in 1:lth)){
+    G.matrices[[k]] = matrix(nrow = length(mix.matrices[[i]][1,]), ncol=length(mix.matrices[[i]][1,]))
+    lth = length(mix.matrices[[i]][1,])
+    for (j in 1:lth){
       G.matrices[[k]][j:lth,j] = mix.matrices[[i]][j:lth,j]
       G.matrices[[k]][j,j:lth] = mix.matrices[[i]][j:lth,j]
-      k = k+1
     }
+    k = k+1
   }
 }
 
+#Extracting correlation matrices
 C.matrices = list()
+C.matrices[[1]] = 0
+C.matrices[[2]] = 0
 for (i in 1:num.of.files){
-  lth = length(mix.matrices[[i]][1,]){
-    for (j in 1:lth){
-      C.matrices[[i]][j:lth,j] = mix.matrices[[i]][j,j:lth]
-      C.matrices[[i]][j,j:lth] = mix.matrices[[i]][j,j:lth]
+  C.matrices[[i]] = matrix(nrow = length(mix.matrices[[i]][1,]), ncol=length(mix.matrices[[i]][1,]))
+  lth = length(mix.matrices[[i]][1,])
+    for (j in 1:(lth-1)){
+      j_ = j+1
+      C.matrices[[i]][j_:lth,j] = as.numeric(as.vector(unlist(mix.matrices[[i]][j,j_:lth], use.names=FALSE)))
+      C.matrices[[i]][j,j_:lth] = as.numeric(as.vector(unlist(mix.matrices[[i]][j,j_:lth], use.names=FALSE)))
       C.matrices[[i]][j,j] = 1
     }
-  }
+  C.matrices[[i]][lth,lth] = 1
 }
 
-############################EDIT END########################################
 
-
-
-
-#Extracting just the G-matrices
-G.matrices = list()
-for (i in 1:num.of.files){
-  G.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
-}
-names(G.matrices) = file.names
-
-#Creating correlation matrices
-
-c.matrices = list()
-for(i in 1:length(G.matrices)){
-  corr.mat = G.matrices[[i]]
-  diag = list()
-  for(j in 1:ncol(corr.mat)){
-    diag[j] = corr.mat[j,j]
-  }
-  for(j in 1:length(diag)){
-    for(k in 1:length(diag)){
-      corr.mat[j,k] = corr.mat[j,k] / (sqrt(diag[[j]]*diag[[k]]))
-    }
-  }
-  c.matrices[[i]] = corr.mat
-}
-names(c.matrices) = file.names
 
 
 #Mean standardize
