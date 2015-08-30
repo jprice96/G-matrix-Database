@@ -30,6 +30,7 @@ for(i in 1:num.of.files){
 #This names all of the files by their author, year and pop
 names(input.data) = file.names
 
+
 #Sorting by sub-pop
 populations = list()
 for (i in 1:length(file.names)){
@@ -53,7 +54,6 @@ for (i in 1:length(populations)){
     n = n + 1
   }
 }
-
 
 
 # Extracting mixed (co)variance - correlation matrices
@@ -97,7 +97,33 @@ for (i in 1:num.of.files){
 }
 
 
+#Check if study has G-matrix
+has.Gmatrix = list()
+for(i in 1:num.of.files){
+  if(mix.matrices[[i]][1,1]=="NULL"){
+    has.Gmatrix[i] = FALSE
+  }
+  if(mix.matrices[[i]][1,1]!="NULL"){
+    has.Gmatrix[i] = TRUE
+  }
+}
 
+#Check is study has means
+has.means = list()
+for(i in 1:num.of.files){
+  if(input.data[[i]][2,2]=="NULL"){
+    has.means[i] = FALSE
+  }
+  if(input.data[[i]][2,2]!="NULL"){
+    has.means[i] = TRUE
+  }
+}
+
+#Check if suitable for mean standardization - if =2 yes if <2 (i.e. 1 or 0) than no
+mean.standard = list()
+for(i in 1:num.of.files){
+  mean.standard[i] = has.Gmatrix[[i]] + has.means[[i]]
+}
 
 #Mean standardize
 xstd.mat = list()
@@ -110,9 +136,58 @@ for(i in 1:length(G.matrices)){
     xstd.mat[[j]]= as.data.frame(G.matrices[i]) / (means %*% t(means));
     xstd.names[j] = file.names[i];
     j=j+1
-    }
+  }
 }
 names(xstd.mat) = xstd.names
+
+
+#Comparison of Gmax contribution to variance
+
+anc.gmax = list()
+nov.gmax = list()
+has.NOV = grep("NOV", data.groups[3,])
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  pops = data.groups[2:3,idx]
+  anc.idx = grep(pops[1], file.names)
+  nov.idx = grep(pops[2], file.names)
+  anc.mat = C.matrices[[anc.idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.val = anc.val/length(anc.val)
+  anc.gmax[i] = anc.val[1]
+  
+  nov.mat = C.matrices[[nov.idx]]
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.val = nov.val/length(nov.val)
+  nov.gmax[i] = nov.val[1]
+}
+
+ANC = 1
+ANC = rep(ANC, times=length(anc.gmax))
+ID = c(1:length(anc.gmax))
+anc.gmax = as.data.frame(t(as.data.frame(anc.gmax)), row.names=c(1:length(anc.gmax)))
+anc.gmax = data.frame(gmax=anc.gmax, env=ANC, ID=ID)
+
+NOV = 2
+NOV = rep(NOV, times=length(nov.gmax))
+ID = c(1:length(nov.gmax))
+nov.gmax = as.data.frame(t(as.data.frame(nov.gmax)), row.names=c(1:length(nov.gmax)))
+nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
+
+comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
+
+stripchart(comb.gmax$gmax~comb.gmax$env, method="overplot", vertical=TRUE)
+
+#####???????########
+for(ID in split(comb.gmax, comb.gmax$ID)){
+  lines(comb.gmax$gmax ~ comb.gmax$env, comb.gmax$ID)
+}
+#####???????#######
+
+
 
 
 #Analysis of matrix size (w/ xstd.mat)
