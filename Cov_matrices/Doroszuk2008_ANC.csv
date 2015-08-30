@@ -1,3 +1,7 @@
-total.reproduction,NULL,0.892857,0.25,-0.04,0.08
-life.span,NULL,2,-0.04,0.02,-0.03
-reproductive.period,NULL,0.8,0.08,-0.03,0.08
+total.reproduction,NULL,0.28,0.25,-0.24,0.44,,,,
+life.span,NULL,0.01,-0.04,0.02,0.4,,,,
+reproductive.period,NULL,0.1,0.08,-0.03,0.08,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,

@@ -1,0 +1,288 @@
+#Downloads and unzips the G-matrix Data repository from GitHub
+download.file("https://github.com/jprice96/G-matrix-Database/archive/master.zip", destfile="cov_matrices.zip")
+unzip("cov_matrices.zip")
+
+#Resets working directory from My Documents to downloaded Cov_matrices folder
+setwd("G-matrix-Database-master/Cov_matrices")
+
+#This creates a list of all of the files in the directory
+data.files = dir(pattern="*csv")
+
+#This is the number of files/matrices we have
+num.of.files = length(data.files)
+
+#This creates a blank list
+input.data = list()
+
+#This creates a list of file names minus the .csv
+file.names = list()
+for(i in 1:num.of.files){
+  file.names[i] = gsub(".csv", "", data.files[i])
+}
+col.names = list("trait", "trait.mean", "var(P)")
+
+#This is a loop which goes through the files and converts the data
+for(i in 1:num.of.files){
+  input.data[[i]] = read.csv(data.files[i], header=FALSE)
+  colnames(input.data[[i]]) = col.names
+}
+
+#This names all of the files by their author, year and pop
+names(input.data) = file.names
+
+#Sorting by sub-pop
+populations = list()
+for (i in 1:length(file.names)){
+  populations[i] = strsplit(as.character(file.names[i]), split="_")
+}
+
+data.groups = data.frame()
+data.groups[1,1] = 0
+n = 1
+for (i in 1:length(populations)){
+  new.pop = TRUE
+  for (j in 1:length(data.groups[1,])){
+    if (data.groups[1,j] == populations[[i]][1]){
+      new.pop = FALSE
+    }
+  }
+  if (new.pop == TRUE){
+    pop.name = objects(input.data, pattern=as.character(populations[[i]][1]));
+    data.groups[1,n] = populations[[i]][1];
+    data.groups[2:(length(pop.name)+1),n] = pop.name;
+    n = n + 1
+  }
+}
+
+#Extracting just the G-matrices
+G.matrices = list()
+for (i in 1:num.of.files){
+  G.matrices[[i]] = (input.data[[i]][,4:((4+nrow(input.data[[i]][1]))-1)])
+}
+names(G.matrices) = file.names
+
+#Creating correlation matrices
+
+c.matrices = list()
+for(i in 1:length(G.matrices)){
+  corr.mat = G.matrices[[i]]
+  diag = list()
+  for(j in 1:ncol(corr.mat)){
+    diag[j] = corr.mat[j,j]
+  }
+  for(j in 1:length(diag)){
+    for(k in 1:length(diag)){
+      corr.mat[j,k] = corr.mat[j,k] / (sqrt(diag[[j]]*diag[[k]]))
+    }
+  }
+  c.matrices[[i]] = corr.mat
+}
+names(c.matrices) = file.names
+
+
+#Mean standardize
+xstd.mat = list()
+xstd.names = list()
+j=1
+for(i in 1:length(G.matrices)){
+  means = list()
+  means = input.data[[i]][,2]
+  if(means[1] != "NULL"){
+    xstd.mat[[j]]= as.data.frame(G.matrices[i]) / (means %*% t(means));
+    xstd.names[j] = file.names[i];
+    j=j+1
+    }
+}
+names(xstd.mat) = xstd.names
+
+
+#Analysis of matrix size (w/ xstd.mat)
+size.comp = list()
+size.comp[[1]] = 0
+size.comp[[2]] = 0
+anc.nov = c("ANC", "NOV")
+Gmat = list()
+attach(xstd.mat)
+for (i in 1:2){
+  Gmat.sort = objects(xstd.mat, pattern=as.character(anc.nov[i]))
+  for (j in 1:length(Gmat.sort)){
+    Gmat = get(Gmat.sort[j])
+    Eign.Gmat = eigen(Gmat)
+    eign.Gmat = Eign.Gmat$values
+    size.comp[[i]][j] = sum(eign.Gmat)
+  }
+}
+detach(xstd.mat)
+
+#Create boxplot of size comparison
+boxplot(size.comp, names=anc.nov)
+title(main="Size_comparison (xstd)", ylab="Matrix size")
+
+
+
+
+#Analysis of variance distribution
+anc.vectors = list()
+anc.vectors[1:2] = 0
+nov.vectors = list()
+nov.vectors[1:2] = 0
+
+Gmat = list()
+attach(xstd.mat)
+for (i in 1:2){
+  Gmat.sort = objects(xstd.mat, pattern=as.character(anc.nov[i]))
+  for (j in 1:length(Gmat.sort)){
+    Gmat = get(Gmat.sort[j])
+    Eign.Gmat = eigen(Gmat)
+    eign.Gmat = Eign.Gmat$values
+    sumvalues = sum(eign.Gmat)
+    if(i==1){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        anc.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+    if(i==2){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        nov.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+  }
+}
+detach(xstd.mat)
+
+combined.vectors = list()
+j=1
+k=1
+for(i in 1:(length(anc.vectors) * 2)){
+  if(i %% 2 == 0){
+    combined.vectors[i] = nov.vectors[j];
+    j=j+1
+  }
+  if(i %% 2 != 0){
+    combined.vectors[i]=anc.vectors[k];
+    k=k+1
+  }
+}
+
+#Create boxplot of vector comparison
+boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
+title(main="Distribution of variance (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
+
+
+#Vector projection
+
+
+#Sorting xsrd pops by ANC/NOV
+pop = list()
+for (i in 1:length(xstd.names)){
+  pop[i] = strsplit(as.character(xstd.names[i]), split="_")
+}
+
+xstd.datagroups = data.frame()
+xstd.datagroups[1,1] = 0
+n = 1
+for (i in 1:length(pop)){
+  new.pop = TRUE
+  for (j in 1:length(xstd.datagroups[1,])){
+    if (xstd.datagroups[1,j] == pop[[i]][1]){
+      new.pop = FALSE
+    }
+  }
+  if (new.pop == TRUE){
+    pop.name = objects(input.data, pattern=as.character(pop[[i]][1]));
+    xstd.datagroups[1,n] = pop[[i]][1];
+    xstd.datagroups[2:(length(pop.name)+1),n] = pop.name;
+    n = n + 1
+  }
+}
+
+
+attach(xstd.mat)
+x = length(xstd.datagroups[1,])
+anc.z = list()
+anc.z[[1]] = 0
+anc.z[[x]] = 0
+nov.z = list()
+nov.z[[1]] = 0
+nov.z[[x]] = 0
+
+for (i in 1:length(xstd.datagroups[1,])){
+  anc.mat = get(xstd.datagroups[2,i])
+  nov.mat = get(xstd.datagroups[3,i])
+  egn.anc = eigen(anc.mat)
+  bta = egn.anc$vectors[,1]
+  anc.project = anc.mat * bta
+  for(j in 1:length(anc.project)){
+    anc.z[[i]][j] = sum(anc.project[,j])
+  }
+  nov.project = nov.mat * bta
+  for(j in 1:length(nov.project)){
+    nov.z[[i]][j] = sum(nov.project[,j])
+  }
+}
+
+anc.matrix.projection = list()
+anc.matrix.projection[[1]] = 0
+anc.matrix.projection[[2]] = 0
+for(i in 1:length(xstd.datagroups[1,])){
+  anc.matrix.projection[[i]] = anc.z[[i]]%*%t(anc.z[[i]]) * get(xstd.datagroups[2,i])
+}
+names(anc.matrix.projection) = xstd.datagroups[2,]
+nov.matrix.projection = list()
+nov.matrix.projection[[1]] = 0
+nov.matrix.projection[[2]] = 0
+for(i in 1:length(xstd.datagroups[1,])){
+  nov.matrix.projection[[i]] = nov.z[[i]]%*%t(nov.z[[i]]) * get(xstd.datagroups[3,i])
+}
+names(nov.matrix.projection) = xstd.datagroups[3,]
+matrix.projection = c(anc.matrix.projection, nov.matrix.projection)
+
+detach(xstd.mat)
+
+
+
+anc.vectors = list()
+anc.vectors[1:2] = 0
+nov.vectors = list()
+nov.vectors[1:2] = 0
+
+Gmat = list()
+attach(matrix.projection)
+for (i in 1:2){
+  Gmat.sort = objects(matrix.projection, pattern=as.character(anc.nov[i]))
+  for (j in 1:length(Gmat.sort)){
+    Gmat = get(Gmat.sort[j])
+    Eign.Gmat = eigen(Gmat)
+    eign.Gmat = Eign.Gmat$values
+    sumvalues = sum(eign.Gmat)
+    if(i==1){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        anc.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+    if(i==2){
+      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
+        nov.vectors[[k]][j] = eign.Gmat[k]/sumvalues
+      }
+    }
+  }
+}
+detach(xstd.mat)
+
+combined.vectors = list()
+j=1
+k=1
+for(i in 1:(length(anc.vectors) * 2)){
+  if(i %% 2 == 0){
+    combined.vectors[i] = nov.vectors[j];
+    j=j+1
+  }
+  if(i %% 2 != 0){
+    combined.vectors[i]=anc.vectors[k];
+    k=k+1
+  }
+}
+
+#Create boxplot of vector comparison
+boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
+title(main="Vector projection variance distribution", xlab="Eigenvectors", ylab="Va / Vtotal")
