@@ -180,13 +180,15 @@ nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
 comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
 
 stripchart(comb.gmax$gmax~comb.gmax$env, method="overplot", vertical=TRUE)
-
-#####???????########
-for(ID in split(comb.gmax, comb.gmax$ID)){
-  lines(comb.gmax$gmax ~ comb.gmax$env, comb.gmax$ID)
+IDs = factor(comb.gmax$ID)
+IDs = levels(IDs)
+for(i in 1:length(IDs)){
+  variance=list(comb.gmax$gmax[i],comb.gmax$gmax[i+length(IDs)])
+  variance = as.numeric(variance)
+  env=list(1,2)
+  env=as.numeric(env)
+  abline(lm(variance~env))
 }
-#####???????#######
-
 
 
 
