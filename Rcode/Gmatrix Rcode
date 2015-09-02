@@ -108,37 +108,45 @@ for(i in 1:num.of.files){
   }
 }
 
-#Check is study has means
-has.means = list()
+G.mat.idxs = list()
+k=1
 for(i in 1:num.of.files){
-  if(input.data[[i]][2,2]=="NULL"){
-    has.means[i] = FALSE
-  }
-  if(input.data[[i]][2,2]!="NULL"){
-    has.means[i] = TRUE
+  if(has.Gmatrix[i] == TRUE){
+    G.mat.idxs[k] = i;
+    k=k+1
   }
 }
 
-#Check if suitable for mean standardization - if =2 yes if <2 (i.e. 1 or 0) than no
-mean.standard = list()
-for(i in 1:num.of.files){
-  mean.standard[i] = has.Gmatrix[[i]] + has.means[[i]]
+xstd.mat = list()
+xstd.mat[[1]] = 0
+xstd.mat[[2]] = 0
+xstd.names = list()
+k=1
+for(i in 1:length(G.mat.idxs)){
+  idx = G.mat.idxs[i]
+  idx = idx[[1]]
+  if(input.data[[idx]][2,2]!="NULL"){
+    xstd.mat[[k]] = matrix(c(as.matrix(G.matrices[[i]]), input.data[[idx]][,2]), nrow = length(input.data[[idx]][,2]));
+    xstd.names[k] = names(input.data[idx]);
+    k=k+1
+  }
 }
+
 
 #Mean standardize
-xstd.mat = list()
-xstd.names = list()
-j=1
-for(i in 1:length(G.matrices)){
-  means = list()
-  means = input.data[[i]][,2]
-  if(means[1] != "NULL"){
-    xstd.mat[[j]]= as.data.frame(G.matrices[i]) / (means %*% t(means));
-    xstd.names[j] = file.names[i];
-    j=j+1
-  }
+X.matrices = list()
+X.matrices[[1]] = 0
+X.matrices[[2]] = 0
+for(i in 1:length(xstd.mat)){
+  mat.dim = length(xstd.mat[[i]][,1])
+  Gmat = xstd.mat[[i]][1:mat.dim, 1:mat.dim]
+  means = xstd.mat[[i]][,(mat.dim+1)]
+  Mmat = means%*% t(means)
+  X.matrices[[i]] = Gmat / Mmat
 }
-names(xstd.mat) = xstd.names
+names(X.matrices) = xstd.names
+
+
 
 
 #Comparison of Gmax contribution to variance
