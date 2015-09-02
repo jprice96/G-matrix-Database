@@ -1,7 +1,4 @@
-peak.amplitude,NULL,0.69,NULL,-1.05,0.29,0.2,,,
-signal.rate,NULL,0.07,NULL,NULL,0.33,0.99,,,
-asynchrony.interval,NULL,0.22,NULL,NULL,NULL,-0.11,,,
-development.time,NULL,0.66,NULL,NULL,NULL,NULL,,,
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
+peak.amplitude,NULL,0.69,NULL,-1.05,0.29,0.2
+signal.rate,NULL,0.07,NULL,NULL,0.33,0.99
+asynchrony.interval,NULL,0.22,NULL,NULL,NULL,-0.11
+development.time,NULL,0.66,NULL,NULL,NULL,NULL

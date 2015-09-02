@@ -1,5 +1,4 @@
-development.time,NULL,0.315,NULL,-0.534,-0.649,0.757,
-mass,NULL,0.208,NULL,NULL,0.918,-0.761,
-body.length,NULL,0.082,NULL,NULL,NULL,-0.603,
-tail.length,NULL,0.113,NULL,NULL,NULL,NULL,
-,,,,,,,
+development.time,NULL,0.315,NULL,-0.534,-0.649,0.757
+mass,NULL,0.208,NULL,NULL,0.918,-0.761
+body.length,NULL,0.082,NULL,NULL,NULL,-0.603
+tail.length,NULL,0.113,NULL,NULL,NULL,NULL

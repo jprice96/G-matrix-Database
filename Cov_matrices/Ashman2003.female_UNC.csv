@@ -1,5 +1,4 @@
-ovules.per.flower,92,0.37,NULL,0.15,0.05,0.25,
-petal.size,70.7,0.24,NULL,NULL,-0.09,0.31,
-fruit.set,0.59,0.11,NULL,NULL,NULL,0.03,
-flower.number,14.1,0.12,NULL,NULL,NULL,NULL,
-,,,,,,,
+ovules.per.flower,92,0.37,NULL,0.15,0.05,0.25
+petal.size,70.7,0.24,NULL,NULL,-0.09,0.31
+fruit.set,0.59,0.11,NULL,NULL,NULL,0.03
+flower.number,14.1,0.12,NULL,NULL,NULL,NULL
