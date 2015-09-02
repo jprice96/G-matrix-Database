@@ -200,6 +200,55 @@ for(i in 1:length(IDs)){
 
 
 
+#Comparison of Gmax contribution to variance FOR XSTD MATRICES
+
+anc.gmax = list()
+nov.gmax = list()
+has.NOV = grep("NOV", xstd.names)
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  pops = xstd.names[(idx-1):idx]
+  anc.idx = grep(pops[1], xstd.names)
+  nov.idx = grep(pops[2], xstd.names)
+  
+  anc.mat = X.matrices[[anc.idx]]
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.gmax[i] = anc.val[1]
+  
+  nov.mat = X.matrices[[nov.idx]]
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.gmax[i] = nov.val[1]
+}
+
+ANC = 1
+ANC = rep(ANC, times=length(anc.gmax))
+ID = c(1:length(anc.gmax))
+anc.gmax = as.data.frame(t(as.data.frame(anc.gmax)), row.names=c(1:length(anc.gmax)))
+anc.gmax = data.frame(gmax=anc.gmax, env=ANC, ID=ID)
+
+NOV = 2
+NOV = rep(NOV, times=length(nov.gmax))
+ID = c(1:length(nov.gmax))
+nov.gmax = as.data.frame(t(as.data.frame(nov.gmax)), row.names=c(1:length(nov.gmax)))
+nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
+
+comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
+
+stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE)
+IDs = factor(comb.gmax$ID)
+IDs = levels(IDs)
+for(i in 1:length(IDs)){
+  variance=list(comb.gmax$gmax[i],comb.gmax$gmax[i+length(IDs)])
+  variance = as.numeric(variance)
+  env=list(1,2)
+  env=as.numeric(env)
+  abline(lm(variance~env))
+}
+
+
+
 #Analysis of matrix size (w/ xstd.mat)
 size.comp = list()
 size.comp[[1]] = 0
