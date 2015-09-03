@@ -149,7 +149,7 @@ names(X.matrices) = xstd.names
 
 
 
-#Comparison of Gmax contribution to variance
+#Comparison of Gmax contribution to variance (CORR matrices)
 
 anc.gmax = list()
 nov.gmax = list()
@@ -188,7 +188,7 @@ nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
 comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
 
 #y.lim = c(0.2,1.0)
-stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE
+stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Correlation matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / n of traits"
            #, ylim=y.lim
 )
 IDs = factor(comb.gmax$ID)
@@ -239,8 +239,8 @@ nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
 
 comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
 
-#y.lim = c(0.2,1.0)
-stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE
+#y.lim = c(0,0.3)
+stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Mean Std. matrices", xlab="Environment (ANC , NOV)", ylab="Gmax"
            #, ylim=y.lim
 )
 IDs = factor(comb.gmax$ID)
@@ -292,7 +292,7 @@ nov.va = data.frame(Va=nov.va, enc=NOV, ID=ID)
 comb.va = data.frame(Va=c(anc.va[,1], nov.va[,1]), env=c(anc.va[,2], nov.va[,2]), ID=c(anc.va[,3], nov.va[,3]))
 
 #y.lim = c(0.2,1.0)
-stripchart(comb.va$Va~comb.va$env, method="jitter", jitter=0.0075, vertical=TRUE
+stripchart(comb.va$Va~comb.va$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Size of G", xlab="Environment (ANC , NOV)", ylab="Total variance (size)"
            #, ylim=y.lim
 )
 IDs = factor(comb.va$ID)
@@ -304,6 +304,72 @@ for(i in 1:length(IDs)){
   env=as.numeric(env)
   abline(lm(variance~env))
 }
+
+
+
+
+#Distribution of variance across eigenvalues
+
+anc.values = list()
+anc.values[[1]] = 0
+anc.values[[7]] = 0
+nov.values = list()
+nov.values[[1]] = 0
+nov.values[[7]] = 0
+#has.NOV already exists from comparison of C.matrices Gmax values
+#has.NOV = grep("NOV", data.groups[3,])
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.mat = C.matrices[[(idx-1)]]
+  nov.mat = C.matrices[[idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.val = anc.val/length(anc.val)
+  
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.val = nov.val/length(nov.val)
+  
+  for(k in 1:length(anc.val)){
+    anc.values[[k]][i] = anc.val[k]
+    nov.values[[k]][i] = nov.val[k]
+  }
+}
+
+anc.table = data.frame()
+for(i in 1:length(anc.values)){
+  anc.table[(1:length(anc.values[[i]])),i] = anc.values[[i]]
+}
+ANC = "ANC"
+anc.table[(1:length(anc.table[,1])),(length(anc.table[1,])+1)] = rep(ANC, times=length(anc.table[,1]))
+
+nov.table = data.frame()
+for(i in 1:length(nov.values)){
+  nov.table[(1:length(nov.values[[i]])),i] = nov.values[[i]]
+}
+NOV = "NOV"
+nov.table[(1:length(nov.table[,1])),(length(nov.table[1,])+1)] = rep(NOV, times=length(nov.table[,1]))
+
+comb.table = anc.table
+for(i in 1:length(nov.table[,1])){
+  row.num = length(nov.table[,1])+i
+  comb.table[row.num,] = nov.table[i,]
+}
+
+attach(comb.table)
+boxplot(c(V1~V8,V2~V8,V3~V8,V4~V8,V5~V8,V6~V8,V7~V8))
+detach(comb.table)
+
+boxplot(c(anc.values, nov.values))
+boxplot(anc.values,nov.values)
+
+
+boxplot(anc.values)
+boxplot(nov.values #, add=TRUE
+        )
+
+
 
 
 
