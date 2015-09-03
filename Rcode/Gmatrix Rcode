@@ -217,12 +217,12 @@ for(i in 1:length(has.NOV)){
   anc.mat = X.matrices[[anc.idx]]
   anc.egn = eigen(anc.mat)
   anc.val = anc.egn$values
-  anc.gmax[i] = anc.val[1]
+  anc.gmax[i] = anc.val[1]#/sum(anc.val)
   
   nov.mat = X.matrices[[nov.idx]]
   nov.egn = eigen(nov.mat)
   nov.val = nov.egn$values
-  nov.gmax[i] = nov.val[1]
+  nov.gmax[i] = nov.val[1]#/sum(nov.val)
 }
 
 ANC = 1
@@ -317,7 +317,7 @@ nov.values = list()
 nov.values[[1]] = 0
 nov.values[[7]] = 0
 #has.NOV already exists from comparison of C.matrices Gmax values
-#has.NOV = grep("NOV", data.groups[3,])
+has.NOV = grep("NOV", data.groups[3,])
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
   anc.mat = C.matrices[[(idx-1)]]
@@ -351,79 +351,84 @@ for(i in 1:length(nov.values)){
 NOV = "NOV"
 nov.table[(1:length(nov.table[,1])),(length(nov.table[1,])+1)] = rep(NOV, times=length(nov.table[,1]))
 
-comb.table = anc.table
-for(i in 1:length(nov.table[,1])){
-  row.num = length(nov.table[,1])+i
-  comb.table[row.num,] = nov.table[i,]
+
+colours = c(rep("grey20",2), rep("grey80",2))
+x.axis.labels = c("E1", "E2", "E3", "E4", "E5", "E6", "E7")
+x.axis.ticks = c(1.5, 3.5, 5.5, 7.5, 9.5, 11.5, 13.5)
+boxplot(list(anc.values[[1]], nov.values[[1]],
+          anc.values[[2]], nov.values[[2]],
+          anc.values[[3]], nov.values[[3]],
+          anc.values[[4]], nov.values[[4]],
+          anc.values[[5]], nov.values[[5]],
+          anc.values[[6]], nov.values[[6]],
+          anc.values[[7]], nov.values[[7]]),
+        col=colours, xlab="Amount of total variation contributed", ylab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments",
+        frame.plot=FALSE, axes=FALSE)
+axis(1, at=x.axis.ticks, labels=x.axis.labels)
+axis(2)
+legend(11, 0.7, legend=c("left=ANC", "right=NOV"), bty="n")
+
+
+#Plot heritabilities
+
+anc.h2 = list()
+anc.h2[[1]] = 0
+anc.h2[[2]] = 0
+nov.h2 = anc.h2
+
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.data = input.data[[(idx-1)]]
+  nov.data = input.data[[idx]]
+  anc.h2[[i]] = anc.data[,3]
+  nov.h2[[i]] = nov.data[,3]
 }
 
-attach(comb.table)
-boxplot(c(V1~V8,V2~V8,V3~V8,V4~V8,V5~V8,V6~V8,V7~V8))
-detach(comb.table)
+anc.h2_ = list()
+nov.h2_ = list()
 
-boxplot(c(anc.values, nov.values))
-boxplot(anc.values,nov.values)
-
-
-boxplot(anc.values)
-boxplot(nov.values #, add=TRUE
-        )
-
-
-
-
-
-
-
-
-
-
-#Analysis of variance distribution
-anc.vectors = list()
-anc.vectors[1:2] = 0
-nov.vectors = list()
-nov.vectors[1:2] = 0
-
-Gmat = list()
-attach(xstd.mat)
-for (i in 1:2){
-  Gmat.sort = objects(xstd.mat, pattern=as.character(anc.nov[i]))
-  for (j in 1:length(Gmat.sort)){
-    Gmat = get(Gmat.sort[j])
-    Eign.Gmat = eigen(Gmat)
-    eign.Gmat = Eign.Gmat$values
-    sumvalues = sum(eign.Gmat)
-    if(i==1){
-      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
-        anc.vectors[[k]][j] = eign.Gmat[k]/sumvalues
-      }
-    }
-    if(i==2){
-      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
-        nov.vectors[[k]][j] = eign.Gmat[k]/sumvalues
-      }
-    }
-  }
-}
-detach(xstd.mat)
-
-combined.vectors = list()
-j=1
-k=1
-for(i in 1:(length(anc.vectors) * 2)){
-  if(i %% 2 == 0){
-    combined.vectors[i] = nov.vectors[j];
-    j=j+1
-  }
-  if(i %% 2 != 0){
-    combined.vectors[i]=anc.vectors[k];
-    k=k+1
-  }
+for(i in 1:length(has.NOV)){
+  anc.h2_ = as.list(c(anc.h2_, anc.h2[[i]]))
+  nov.h2_ = as.list(c(nov.h2_, nov.h2[[i]]))
 }
 
-#Create boxplot of vector comparison
-boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
-title(main="Distribution of variance (xstd)", xlab="Eigenvectors", ylab="Va / Vtotal")
+ANC.h2 = list()
+NOV.h2 = list()
+for(i in 1:length(anc.h2_)){
+  ANC.h2[i] = as.matrix(anc.h2_[[i]])
+  NOV.h2[i] = as.matrix(nov.h2_[[i]])
+}
+
+anc.heritability = unlist(as.data.frame(t(as.matrix(ANC.h2))), use.names=FALSE)
+nov.heritability = unlist(as.data.frame(t(as.matrix(NOV.h2))), use.names=FALSE)
+
+ANC = 1
+ANC = rep(ANC, times=length(anc.heritability))
+ID = c(1:length(anc.heritability))
+anc.heritability = data.frame(h2=anc.heritability, env=ANC, ID=ID)
+
+NOV = 2
+NOV = rep(NOV, times=length(nov.heritability))
+ID = c(1:length(nov.heritability))
+nov.heritability = data.frame(h2=nov.heritability, enc=NOV, ID=ID)
+
+
+comb.h2 = data.frame(h2=c(anc.heritability[,1], nov.heritability[,1]), env=c(anc.heritability[,2], nov.heritability[,2]), ID=c(anc.heritability[,3], nov.heritability[,3]))
+
+#y.lim = c(0.2,1.0)
+stripchart(comb.h2$h2~comb.h2$env, pch=16, method="jitter", jitter=0.05, vertical=TRUE, main="Diff in h2", xlab="Environment (ANC , NOV)", ylab="h2"
+           #, ylim=y.lim
+)
+IDs = factor(comb.h2$ID)
+IDs = levels(IDs)
+for(i in 1:length(IDs)){
+  variance=list(comb.h2$h2[i],comb.h2$h2[i+length(IDs)])
+  variance = as.numeric(variance)
+  env=list(1,2)
+  env=as.numeric(env)
+  abline(lm(variance~env), col="grey60")
+}
+
 
 
 #Vector projection
