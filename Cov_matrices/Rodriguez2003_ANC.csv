@@ -1,0 +1,4 @@
+pulse.rate.threshold,NULL,0.4,NULL,-0.02,0.12,0.25
+femur.length,NULL,0.48,NULL,NULL,0.4,0.15
+ear.width,NULL,0.29,NULL,NULL,NULL,-0.11
+development.time,NULL,0.13,NULL,NULL,NULL,NULL
