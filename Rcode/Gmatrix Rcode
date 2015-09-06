@@ -316,7 +316,6 @@ anc.values[[7]] = 0
 nov.values = list()
 nov.values[[1]] = 0
 nov.values[[7]] = 0
-#has.NOV already exists from comparison of C.matrices Gmax values
 has.NOV = grep("NOV", data.groups[3,])
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
@@ -356,12 +355,12 @@ colours = c(rep("grey20",2), rep("grey80",2))
 x.axis.labels = c("E1", "E2", "E3", "E4", "E5", "E6", "E7")
 x.axis.ticks = c(1.5, 3.5, 5.5, 7.5, 9.5, 11.5, 13.5)
 boxplot(list(anc.values[[1]], nov.values[[1]],
-          anc.values[[2]], nov.values[[2]],
-          anc.values[[3]], nov.values[[3]],
-          anc.values[[4]], nov.values[[4]],
-          anc.values[[5]], nov.values[[5]],
-          anc.values[[6]], nov.values[[6]],
-          anc.values[[7]], nov.values[[7]]),
+             anc.values[[2]], nov.values[[2]],
+             anc.values[[3]], nov.values[[3]],
+             anc.values[[4]], nov.values[[4]],
+             anc.values[[5]], nov.values[[5]],
+             anc.values[[6]], nov.values[[6]],
+             anc.values[[7]], nov.values[[7]]),
         col=colours, xlab="Amount of total variation contributed", ylab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments",
         frame.plot=FALSE, axes=FALSE)
 axis(1, at=x.axis.ticks, labels=x.axis.labels)
@@ -375,7 +374,7 @@ anc.h2 = list()
 anc.h2[[1]] = 0
 anc.h2[[2]] = 0
 nov.h2 = anc.h2
-
+has.NOV = grep("NOV", data.groups[3,])
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
   anc.data = input.data[[(idx-1)]]
@@ -433,118 +432,57 @@ for(i in 1:length(IDs)){
 
 #Vector projection
 
-
-#Sorting xsrd pops by ANC/NOV
-pop = list()
-for (i in 1:length(xstd.names)){
-  pop[i] = strsplit(as.character(xstd.names[i]), split="_")
+anc.project = list()
+anc.project[[1]] = 0
+anc.project[[2]] = 0
+nov.project = list()
+nov.project[[1]] = 0
+nov.project[[2]] = 0
+#has.NOV already exists from comparison of C.matrices Gmax values
+has.NOV = grep("NOV", xstd.names)
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  pops = xstd.names[(idx-1):idx]
+  anc.idx = grep(pops[1], xstd.names)
+  nov.idx = grep(pops[2], xstd.names)
+  anc.mat = X.matrices[[anc.idx]]
+  nov.mat = X.matrices[[nov.idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.bta = anc.egn$vectors[,1]
+  anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
+  
+  nov.egn = eigen(nov.mat)
+  nov.bta = nov.egn$vectors[,1]
+  nov.project[[i]] = t(nov.bta) %*% nov.mat %*% nov.bta
 }
 
-xstd.datagroups = data.frame()
-xstd.datagroups[1,1] = 0
-n = 1
-for (i in 1:length(pop)){
-  new.pop = TRUE
-  for (j in 1:length(xstd.datagroups[1,])){
-    if (xstd.datagroups[1,j] == pop[[i]][1]){
-      new.pop = FALSE
-    }
-  }
-  if (new.pop == TRUE){
-    pop.name = objects(input.data, pattern=as.character(pop[[i]][1]));
-    xstd.datagroups[1,n] = pop[[i]][1];
-    xstd.datagroups[2:(length(pop.name)+1),n] = pop.name;
-    n = n + 1
-  }
+
+ANC = 1
+ANC = rep(ANC, times=length(anc.project))
+ID = c(1:length(anc.project))
+anc.project = as.data.frame(t(as.data.frame(anc.project)), row.names=c(1:length(anc.project)))
+anc.project = data.frame(project=anc.project, env=ANC, ID=ID)
+
+NOV = 2
+NOV = rep(NOV, times=length(nov.project))
+ID = c(1:length(nov.project))
+nov.project = as.data.frame(t(as.data.frame(nov.project)), row.names=c(1:length(nov.project)))
+nov.project = data.frame(project=nov.project, enc=NOV, ID=ID)
+
+
+comb.project = data.frame(project=c(anc.project[,1], nov.project[,1]), env=c(anc.project[,2], nov.project[,2]), ID=c(anc.project[,3], nov.project[,3]))
+
+#y.lim = c(0.2,1.0)
+stripchart(comb.project$project~comb.project$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Vector projection", xlab="Environment (ANC , NOV)", ylab="b'Gb"
+           #, ylim=y.lim
+)
+IDs = factor(comb.project$ID)
+IDs = levels(IDs)
+for(i in 1:length(IDs)){
+  variance=list(comb.project$project[i],comb.project$project[i+length(IDs)])
+  variance = as.numeric(variance)
+  env=list(1,2)
+  env=as.numeric(env)
+  abline(lm(variance~env))
 }
-
-
-attach(xstd.mat)
-x = length(xstd.datagroups[1,])
-anc.z = list()
-anc.z[[1]] = 0
-anc.z[[x]] = 0
-nov.z = list()
-nov.z[[1]] = 0
-nov.z[[x]] = 0
-
-for (i in 1:length(xstd.datagroups[1,])){
-  anc.mat = get(xstd.datagroups[2,i])
-  nov.mat = get(xstd.datagroups[3,i])
-  egn.anc = eigen(anc.mat)
-  bta = egn.anc$vectors[,1]
-  anc.project = anc.mat * bta
-  for(j in 1:length(anc.project)){
-    anc.z[[i]][j] = sum(anc.project[,j])
-  }
-  nov.project = nov.mat * bta
-  for(j in 1:length(nov.project)){
-    nov.z[[i]][j] = sum(nov.project[,j])
-  }
-}
-
-anc.matrix.projection = list()
-anc.matrix.projection[[1]] = 0
-anc.matrix.projection[[2]] = 0
-for(i in 1:length(xstd.datagroups[1,])){
-  anc.matrix.projection[[i]] = anc.z[[i]]%*%t(anc.z[[i]]) * get(xstd.datagroups[2,i])
-}
-names(anc.matrix.projection) = xstd.datagroups[2,]
-nov.matrix.projection = list()
-nov.matrix.projection[[1]] = 0
-nov.matrix.projection[[2]] = 0
-for(i in 1:length(xstd.datagroups[1,])){
-  nov.matrix.projection[[i]] = nov.z[[i]]%*%t(nov.z[[i]]) * get(xstd.datagroups[3,i])
-}
-names(nov.matrix.projection) = xstd.datagroups[3,]
-matrix.projection = c(anc.matrix.projection, nov.matrix.projection)
-
-detach(xstd.mat)
-
-
-
-anc.vectors = list()
-anc.vectors[1:2] = 0
-nov.vectors = list()
-nov.vectors[1:2] = 0
-
-Gmat = list()
-attach(matrix.projection)
-for (i in 1:2){
-  Gmat.sort = objects(matrix.projection, pattern=as.character(anc.nov[i]))
-  for (j in 1:length(Gmat.sort)){
-    Gmat = get(Gmat.sort[j])
-    Eign.Gmat = eigen(Gmat)
-    eign.Gmat = Eign.Gmat$values
-    sumvalues = sum(eign.Gmat)
-    if(i==1){
-      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
-        anc.vectors[[k]][j] = eign.Gmat[k]/sumvalues
-      }
-    }
-    if(i==2){
-      for (k in 1:2){ #The 2 here limits to two eigen vectors being used
-        nov.vectors[[k]][j] = eign.Gmat[k]/sumvalues
-      }
-    }
-  }
-}
-detach(xstd.mat)
-
-combined.vectors = list()
-j=1
-k=1
-for(i in 1:(length(anc.vectors) * 2)){
-  if(i %% 2 == 0){
-    combined.vectors[i] = nov.vectors[j];
-    j=j+1
-  }
-  if(i %% 2 != 0){
-    combined.vectors[i]=anc.vectors[k];
-    k=k+1
-  }
-}
-
-#Create boxplot of vector comparison
-boxplot(x=combined.vectors, names=c("E1 ANC", "E1 NOV", "E2 ANC", "E2 NOV"))
-title(main="Vector projection variance distribution", xlab="Eigenvectors", ylab="Va / Vtotal")
