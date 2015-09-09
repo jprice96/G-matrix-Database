@@ -153,10 +153,10 @@ names(X.matrices) = xstd.names
 
 anc.gmax = list()
 nov.gmax = list()
-has.NOV = grep("NOV", data.groups[3,])
+has.NOV = grep("NOV", file.names)
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
-  pops = data.groups[2:3,idx]
+  pops = file.names[(idx-1):idx]
   anc.idx = grep(pops[1], file.names)
   nov.idx = grep(pops[2], file.names)
   anc.mat = C.matrices[[anc.idx]]
@@ -173,34 +173,15 @@ for(i in 1:length(has.NOV)){
   nov.gmax[i] = nov.val[1]
 }
 
-ANC = 1
-ANC = rep(ANC, times=length(anc.gmax))
-ID = c(1:length(anc.gmax))
-anc.gmax = as.data.frame(t(as.data.frame(anc.gmax)), row.names=c(1:length(anc.gmax)))
-anc.gmax = data.frame(gmax=anc.gmax, env=ANC, ID=ID)
+anc.gmax=unlist(anc.gmax)
+nov.gmax=unlist(nov.gmax)
+gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-NOV = 2
-NOV = rep(NOV, times=length(nov.gmax))
-ID = c(1:length(nov.gmax))
-nov.gmax = as.data.frame(t(as.data.frame(nov.gmax)), row.names=c(1:length(nov.gmax)))
-nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
+plot(gmax.data, main="Correlation matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / n of traits")
+null.line = data.frame(V1=c(0,1), V2=c(0,1))
+lines(x=null.line)
 
-comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
-
-#y.lim = c(0.2,1.0)
-stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Correlation matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / n of traits"
-           #, ylim=y.lim
-)
-IDs = factor(comb.gmax$ID)
-IDs = levels(IDs)
-for(i in 1:length(IDs)){
-  variance=list(comb.gmax$gmax[i],comb.gmax$gmax[i+length(IDs)])
-  variance = as.numeric(variance)
-  env=list(1,2)
-  env=as.numeric(env)
-  abline(lm(variance~env))
-}
-
+wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)
 
 
 #Comparison of Gmax contribution to variance FOR XSTD MATRICES
@@ -217,41 +198,23 @@ for(i in 1:length(has.NOV)){
   anc.mat = X.matrices[[anc.idx]]
   anc.egn = eigen(anc.mat)
   anc.val = anc.egn$values
-  anc.gmax[i] = anc.val[1]#/sum(anc.val)
+  anc.gmax[i] = anc.val[1]/sum(anc.val)
   
   nov.mat = X.matrices[[nov.idx]]
   nov.egn = eigen(nov.mat)
   nov.val = nov.egn$values
-  nov.gmax[i] = nov.val[1]#/sum(nov.val)
+  nov.gmax[i] = nov.val[1]/sum(nov.val)
 }
 
-ANC = 1
-ANC = rep(ANC, times=length(anc.gmax))
-ID = c(1:length(anc.gmax))
-anc.gmax = as.data.frame(t(as.data.frame(anc.gmax)), row.names=c(1:length(anc.gmax)))
-anc.gmax = data.frame(gmax=anc.gmax, env=ANC, ID=ID)
+anc.gmax=unlist(anc.gmax)
+nov.gmax=unlist(nov.gmax)
+gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-NOV = 2
-NOV = rep(NOV, times=length(nov.gmax))
-ID = c(1:length(nov.gmax))
-nov.gmax = as.data.frame(t(as.data.frame(nov.gmax)), row.names=c(1:length(nov.gmax)))
-nov.gmax = data.frame(gmax=nov.gmax, enc=NOV, ID=ID)
+plot(gmax.data, main="Mean Std. matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / total Va")
+null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
+lines(x=null.line)
 
-comb.gmax = data.frame(gmax=c(anc.gmax[,1], nov.gmax[,1]), env=c(anc.gmax[,2], nov.gmax[,2]), ID=c(anc.gmax[,3], nov.gmax[,3]))
-
-#y.lim = c(0,0.3)
-stripchart(comb.gmax$gmax~comb.gmax$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Mean Std. matrices", xlab="Environment (ANC , NOV)", ylab="Gmax"
-           #, ylim=y.lim
-)
-IDs = factor(comb.gmax$ID)
-IDs = levels(IDs)
-for(i in 1:length(IDs)){
-  variance=list(comb.gmax$gmax[i],comb.gmax$gmax[i+length(IDs)])
-  variance = as.numeric(variance)
-  env=list(1,2)
-  env=as.numeric(env)
-  abline(lm(variance~env))
-}
+wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)
 
 
 #Comparison of size of G (XSTD matrices only)
@@ -276,47 +239,126 @@ for(i in 1:length(has.NOV)){
   nov.va[i] = sum(nov.val)
 }
 
-ANC = 1
-ANC = rep(ANC, times=length(anc.va))
-ID = c(1:length(anc.va))
-anc.va = as.data.frame(t(as.data.frame(anc.va)), row.names=c(1:length(anc.va)))
-anc.va = data.frame(Va=anc.va, env=ANC, ID=ID)
+anc.va=unlist(anc.va)
+nov.va=unlist(nov.va)
+va.data = data.frame(ANC=anc.va, NOV=nov.va)
 
-NOV = 2
-NOV = rep(NOV, times=length(nov.va))
-ID = c(1:length(nov.va))
-nov.va = as.data.frame(t(as.data.frame(nov.va)), row.names=c(1:length(nov.va)))
-nov.va = data.frame(Va=nov.va, enc=NOV, ID=ID)
+plot(va.data, main="Size of G", xlab="Environment (ANC , NOV)", ylab="Total variance (size)")
+null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
+lines(x=null.line)
+
+wilcox.test(x=va.data[,1], y=va.data[,2], paired=TRUE)
 
 
-comb.va = data.frame(Va=c(anc.va[,1], nov.va[,1]), env=c(anc.va[,2], nov.va[,2]), ID=c(anc.va[,3], nov.va[,3]))
 
-#y.lim = c(0.2,1.0)
-stripchart(comb.va$Va~comb.va$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Size of G", xlab="Environment (ANC , NOV)", ylab="Total variance (size)"
-           #, ylim=y.lim
-)
-IDs = factor(comb.va$ID)
-IDs = levels(IDs)
-for(i in 1:length(IDs)){
-  variance=list(comb.va$Va[i],comb.va$Va[i+length(IDs)])
-  variance = as.numeric(variance)
-  env=list(1,2)
-  env=as.numeric(env)
-  abline(lm(variance~env))
+
+
+#Plot heritabilities
+
+anc.h2 = list()
+anc.h2[[1]] = 0
+anc.h2[[2]] = 0
+nov.h2 = anc.h2
+has.NOV = grep("NOV", file.names)
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.data = input.data[[(idx-1)]]
+  nov.data = input.data[[idx]]
+  anc.h2[[i]] = anc.data[,3]
+  nov.h2[[i]] = nov.data[,3]
 }
 
+#anc.h2_ = list()
+#nov.h2_ = list()
+
+#for(i in 1:length(has.NOV)){
+#  anc.h2_ = as.list(c(anc.h2_, anc.h2[[i]]))
+#  nov.h2_ = as.list(c(nov.h2_, nov.h2[[i]]))
+#}
+
+#ANC.h2 = list()
+#NOV.h2 = list()
+#for(i in 1:length(anc.h2_)){
+#  ANC.h2[i] = as.matrix(anc.h2_[[i]])
+#  NOV.h2[i] = as.matrix(nov.h2_[[i]])
+#}
+
+#anc.heritability = unlist(as.data.frame(t(as.matrix(ANC.h2))), use.names=FALSE)
+#nov.heritability = unlist(as.data.frame(t(as.matrix(NOV.h2))), use.names=FALSE)
 
 
+anc.h2=unlist(anc.h2[-c(24)])
+nov.h2=unlist(nov.h2[-c(24)])
+
+
+h2.data = data.frame(ANC=anc.h2, NOV=nov.h2)
+h2.data = subset(h2.data, h2.data$ANC < 1)
+h2.data = subset(h2.data, h2.data$NOV < 1)
+
+
+plot(h2.data, main="Diff in h2", xlab="Environment (ANC , NOV)", ylab="h2")
+null.line = data.frame(V1=c(-1,2), V2=c(-1,2))
+lines(x=null.line)
+
+wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE)
+#Greater is below null.line, less is above null.line
+wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="greater")
+wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="less")
+
+
+#Vector projection
+
+anc.project = list()
+anc.project[[1]] = 0
+anc.project[[2]] = 0
+nov.project = list()
+nov.project[[1]] = 0
+nov.project[[2]] = 0
+prj.table = data.frame(V1=0, V2=0, V3=0, V4=0, V5=0, V6=0, V7=0)
+#has.NOV already exists from comparison of C.matrices Gmax values
+has.NOV = grep("NOV", file.names)
+for(j in 1:7){
+  for(i in 1:length(has.NOV)){
+    idx = has.NOV[i]
+    pops = file.names[(idx-1):idx]
+    anc.idx = grep(pops[1], file.names)
+    nov.idx = grep(pops[2], file.names)
+    anc.mat = C.matrices[[anc.idx]]
+    nov.mat = C.matrices[[nov.idx]]
+    
+    if(length(anc.mat[,1])>=j){
+      anc.egn = eigen(anc.mat);
+      anc.bta = anc.egn$vectors[,j];
+      anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
+    }
+    if(length(anc.mat[,1])<j){
+      anc.project[[i]] = NA
+    }
+    if(length(nov.mat[,1])>=j){
+      nov.egn = eigen(nov.mat);
+      nov.bta = nov.egn$vectors[,j];
+      nov.project[[i]] = t(nov.bta) %*% anc.mat %*% nov.bta
+      nov.project[[i]] = nov.project[[i]]/sum(anc.egn$values)
+    }
+    if(length(nov.mat[,1])<j){
+      nov.project[[i]] = NA
+    }
+  }
+  prj.table[1:length(nov.project),j] = unlist(nov.project)
+}
+
+PRJ = rep("PRJ", times=length(prj.table[,1]))
+prj.table[,8] = PRJ
 
 #Distribution of variance across eigenvalues
 
 anc.values = list()
 anc.values[[1]] = 0
-anc.values[[7]] = 0
+anc.values[[8]] = 0
 nov.values = list()
 nov.values[[1]] = 0
-nov.values[[7]] = 0
-has.NOV = grep("NOV", data.groups[3,])
+nov.values[[8]] = 0
+has.NOV = grep("NOV", file.names)
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
   anc.mat = C.matrices[[(idx-1)]]
@@ -351,138 +393,31 @@ NOV = "NOV"
 nov.table[(1:length(nov.table[,1])),(length(nov.table[1,])+1)] = rep(NOV, times=length(nov.table[,1]))
 
 
-colours = c(rep("grey20",2), rep("grey80",2))
-x.axis.labels = c("E1", "E2", "E3", "E4", "E5", "E6", "E7")
-x.axis.ticks = c(1.5, 3.5, 5.5, 7.5, 9.5, 11.5, 13.5)
-boxplot(list(anc.values[[1]], nov.values[[1]],
-             anc.values[[2]], nov.values[[2]],
-             anc.values[[3]], nov.values[[3]],
-             anc.values[[4]], nov.values[[4]],
-             anc.values[[5]], nov.values[[5]],
-             anc.values[[6]], nov.values[[6]],
-             anc.values[[7]], nov.values[[7]]),
+colours = c("coral3", "peru", "sandybrown", "turquoise4", "aquamarine4", "lightseagreen")
+x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "")
+x.axis.ticks = c(0, 2, 5, 8, 11, 14, 17, 20, 24)
+boxplot(list(anc.values[[1]], nov.values[[1]], prj.table[,1],
+             anc.values[[2]], nov.values[[2]], prj.table[,2],
+             anc.values[[3]], nov.values[[3]], prj.table[,3],
+             anc.values[[4]], nov.values[[4]], prj.table[,4],
+             anc.values[[5]], nov.values[[5]], prj.table[,5],
+             anc.values[[6]], nov.values[[6]], prj.table[,6],
+             anc.values[[7]], nov.values[[7]], prj.table[,7]),
         col=colours, xlab="Amount of total variation contributed", ylab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments",
         frame.plot=FALSE, axes=FALSE)
 axis(1, at=x.axis.ticks, labels=x.axis.labels)
 axis(2)
-legend(11, 0.7, legend=c("left=ANC", "right=NOV"), bty="n")
+legend(18, 0.9, legend=c("anc", "nov", "nov in anc"), bty="n")
 
-
-#Plot heritabilities
-
-anc.h2 = list()
-anc.h2[[1]] = 0
-anc.h2[[2]] = 0
-nov.h2 = anc.h2
-has.NOV = grep("NOV", data.groups[3,])
-for(i in 1:length(has.NOV)){
-  idx = has.NOV[i]
-  anc.data = input.data[[(idx-1)]]
-  nov.data = input.data[[idx]]
-  anc.h2[[i]] = anc.data[,3]
-  nov.h2[[i]] = nov.data[,3]
+p.val = list()
+for(i in 1:7){
+  p.val[i] = t.test(x=na.omit(anc.values[[i]]), y=na.omit(prj.table[,i]), paired=TRUE)$p.value
 }
 
-anc.h2_ = list()
-nov.h2_ = list()
-
-for(i in 1:length(has.NOV)){
-  anc.h2_ = as.list(c(anc.h2_, anc.h2[[i]]))
-  nov.h2_ = as.list(c(nov.h2_, nov.h2[[i]]))
-}
-
-ANC.h2 = list()
-NOV.h2 = list()
-for(i in 1:length(anc.h2_)){
-  ANC.h2[i] = as.matrix(anc.h2_[[i]])
-  NOV.h2[i] = as.matrix(nov.h2_[[i]])
-}
-
-anc.heritability = unlist(as.data.frame(t(as.matrix(ANC.h2))), use.names=FALSE)
-nov.heritability = unlist(as.data.frame(t(as.matrix(NOV.h2))), use.names=FALSE)
-
-ANC = 1
-ANC = rep(ANC, times=length(anc.heritability))
-ID = c(1:length(anc.heritability))
-anc.heritability = data.frame(h2=anc.heritability, env=ANC, ID=ID)
-
-NOV = 2
-NOV = rep(NOV, times=length(nov.heritability))
-ID = c(1:length(nov.heritability))
-nov.heritability = data.frame(h2=nov.heritability, enc=NOV, ID=ID)
-
-
-comb.h2 = data.frame(h2=c(anc.heritability[,1], nov.heritability[,1]), env=c(anc.heritability[,2], nov.heritability[,2]), ID=c(anc.heritability[,3], nov.heritability[,3]))
-
-#y.lim = c(0.2,1.0)
-stripchart(comb.h2$h2~comb.h2$env, pch=16, method="jitter", jitter=0.05, vertical=TRUE, main="Diff in h2", xlab="Environment (ANC , NOV)", ylab="h2"
-           #, ylim=y.lim
-)
-IDs = factor(comb.h2$ID)
-IDs = levels(IDs)
-for(i in 1:length(IDs)){
-  variance=list(comb.h2$h2[i],comb.h2$h2[i+length(IDs)])
-  variance = as.numeric(variance)
-  env=list(1,2)
-  env=as.numeric(env)
-  abline(lm(variance~env), col="grey60")
-}
-
-
-
-#Vector projection
-
-anc.project = list()
-anc.project[[1]] = 0
-anc.project[[2]] = 0
-nov.project = list()
-nov.project[[1]] = 0
-nov.project[[2]] = 0
-#has.NOV already exists from comparison of C.matrices Gmax values
-has.NOV = grep("NOV", xstd.names)
-for(i in 1:length(has.NOV)){
-  idx = has.NOV[i]
-  pops = xstd.names[(idx-1):idx]
-  anc.idx = grep(pops[1], xstd.names)
-  nov.idx = grep(pops[2], xstd.names)
-  anc.mat = X.matrices[[anc.idx]]
-  nov.mat = X.matrices[[nov.idx]]
-  
-  anc.egn = eigen(anc.mat)
-  anc.bta = anc.egn$vectors[,1]
-  anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
-  
-  nov.egn = eigen(nov.mat)
-  nov.bta = nov.egn$vectors[,1]
-  nov.project[[i]] = t(nov.bta) %*% nov.mat %*% nov.bta
-}
-
-
-ANC = 1
-ANC = rep(ANC, times=length(anc.project))
-ID = c(1:length(anc.project))
-anc.project = as.data.frame(t(as.data.frame(anc.project)), row.names=c(1:length(anc.project)))
-anc.project = data.frame(project=anc.project, env=ANC, ID=ID)
-
-NOV = 2
-NOV = rep(NOV, times=length(nov.project))
-ID = c(1:length(nov.project))
-nov.project = as.data.frame(t(as.data.frame(nov.project)), row.names=c(1:length(nov.project)))
-nov.project = data.frame(project=nov.project, enc=NOV, ID=ID)
-
-
-comb.project = data.frame(project=c(anc.project[,1], nov.project[,1]), env=c(anc.project[,2], nov.project[,2]), ID=c(anc.project[,3], nov.project[,3]))
-
-#y.lim = c(0.2,1.0)
-stripchart(comb.project$project~comb.project$env, method="jitter", jitter=0.0075, vertical=TRUE, main="Vector projection", xlab="Environment (ANC , NOV)", ylab="b'Gb"
-           #, ylim=y.lim
-)
-IDs = factor(comb.project$ID)
-IDs = levels(IDs)
-for(i in 1:length(IDs)){
-  variance=list(comb.project$project[i],comb.project$project[i+length(IDs)])
-  variance = as.numeric(variance)
-  env=list(1,2)
-  env=as.numeric(env)
-  abline(lm(variance~env))
+k=1
+for(i in 1:length(p.val)){
+  if(p.val[i]<=0.05){
+    points(x=(i*3), y=(quantile(prj.table[,i], na.rm=TRUE)[4]+0.1), pch="*", cex=2)
+    k=k+1
+  }
 }
