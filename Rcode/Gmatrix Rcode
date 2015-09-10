@@ -177,11 +177,12 @@ anc.gmax=unlist(anc.gmax)
 nov.gmax=unlist(nov.gmax)
 gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-plot(gmax.data, main="Correlation matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / n of traits")
+sig = wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)$p.value
+
+plot(gmax.data, main="Correlation matrices", xlab="Gmax/n in ANC", ylab="Gmax/n in NOV", sub=sig)
 null.line = data.frame(V1=c(0,1), V2=c(0,1))
 lines(x=null.line)
 
-wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)
 
 
 #Comparison of Gmax contribution to variance FOR XSTD MATRICES
@@ -210,11 +211,12 @@ anc.gmax=unlist(anc.gmax)
 nov.gmax=unlist(nov.gmax)
 gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-plot(gmax.data, main="Mean Std. matrices", xlab="Environment (ANC , NOV)", ylab="Gmax / total Va")
+sig = wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)$p.value
+
+plot(gmax.data, main="Mean Std. matrices", xlab="Gmax/sum(Va) in ANC", ylab="Gmax/sum(Va) in NOV", sub=sig)
 null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
 lines(x=null.line)
 
-wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)
 
 
 #Comparison of size of G (XSTD matrices only)
@@ -243,14 +245,11 @@ anc.va=unlist(anc.va)
 nov.va=unlist(nov.va)
 va.data = data.frame(ANC=anc.va, NOV=nov.va)
 
-plot(va.data, main="Size of G", xlab="Environment (ANC , NOV)", ylab="Total variance (size)")
+sig = wilcox.test(x=va.data[,1], y=va.data[,2], paired=TRUE)$p.value
+
+plot(va.data, main="Size of G", xlab="Size in ANC env", ylab="Size in NOV env", sub=sig)
 null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
 lines(x=null.line)
-
-wilcox.test(x=va.data[,1], y=va.data[,2], paired=TRUE)
-
-
-
 
 
 #Plot heritabilities
@@ -268,25 +267,6 @@ for(i in 1:length(has.NOV)){
   nov.h2[[i]] = nov.data[,3]
 }
 
-#anc.h2_ = list()
-#nov.h2_ = list()
-
-#for(i in 1:length(has.NOV)){
-#  anc.h2_ = as.list(c(anc.h2_, anc.h2[[i]]))
-#  nov.h2_ = as.list(c(nov.h2_, nov.h2[[i]]))
-#}
-
-#ANC.h2 = list()
-#NOV.h2 = list()
-#for(i in 1:length(anc.h2_)){
-#  ANC.h2[i] = as.matrix(anc.h2_[[i]])
-#  NOV.h2[i] = as.matrix(nov.h2_[[i]])
-#}
-
-#anc.heritability = unlist(as.data.frame(t(as.matrix(ANC.h2))), use.names=FALSE)
-#nov.heritability = unlist(as.data.frame(t(as.matrix(NOV.h2))), use.names=FALSE)
-
-
 anc.h2=unlist(anc.h2[-c(24)])
 nov.h2=unlist(nov.h2[-c(24)])
 
@@ -295,12 +275,12 @@ h2.data = data.frame(ANC=anc.h2, NOV=nov.h2)
 h2.data = subset(h2.data, h2.data$ANC < 1)
 h2.data = subset(h2.data, h2.data$NOV < 1)
 
+sig = wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE)$p.value
 
-plot(h2.data, main="Diff in h2", xlab="Environment (ANC , NOV)", ylab="h2")
+plot(h2.data, main="Diff in h2", xlab="h2 in ANC env", ylab="h2 in NOV env", sub=sig)
 null.line = data.frame(V1=c(-1,2), V2=c(-1,2))
 lines(x=null.line)
 
-wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE)
 #Greater is below null.line, less is above null.line
 wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="greater")
 wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="less")
@@ -417,7 +397,7 @@ for(i in 1:7){
 k=1
 for(i in 1:length(p.val)){
   if(p.val[i]<=0.05){
-    points(x=(i*3), y=(quantile(prj.table[,i], na.rm=TRUE)[4]+0.1), pch="*", cex=2)
+    points(x=((i*3)+0.2), y=(quantile(prj.table[,i], na.rm=TRUE)[4]+0.1), pch="*", cex=2)
     k=k+1
   }
 }
