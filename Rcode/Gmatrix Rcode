@@ -153,7 +153,7 @@ names(X.matrices) = xstd.names
 
 anc.gmax = list()
 nov.gmax = list()
-has.NOV = grep("NOV", file.names)
+has.NOV = grep("UNC", file.names)
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
   pops = file.names[(idx-1):idx]
@@ -177,9 +177,11 @@ anc.gmax=unlist(anc.gmax)
 nov.gmax=unlist(nov.gmax)
 gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-sig = wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)$p.value
+sig = wilcox.test(x=gmax.data[,2], y=gmax.data[,1], paired=TRUE, alternative="t")$p.value
 
-plot(gmax.data, main="Correlation matrices", xlab="Gmax/n in ANC", ylab="Gmax/n in NOV", sub=sig)
+plot(gmax.data, main="Correlation matrices", xlab="Gmax/n in ANC", ylab="Gmax/n in UNC", sub=sig, axes=FALSE, xlim=c(0,1), ylim=c(0,1))
+axis(1)
+axis(2)
 null.line = data.frame(V1=c(0,1), V2=c(0,1))
 lines(x=null.line)
 
@@ -211,10 +213,12 @@ anc.gmax=unlist(anc.gmax)
 nov.gmax=unlist(nov.gmax)
 gmax.data = data.frame(ANC=anc.gmax, NOV=nov.gmax)
 
-sig = wilcox.test(x=gmax.data[,1], y=gmax.data[,2], paired=TRUE)$p.value
+sig = wilcox.test(x=gmax.data[,2], y=gmax.data[,1], paired=TRUE, alternative="t")$p.value
 
-plot(gmax.data, main="Mean Std. matrices", xlab="Gmax/sum(Va) in ANC", ylab="Gmax/sum(Va) in NOV", sub=sig)
-null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
+plot(gmax.data, main="Mean Std. matrices", xlab="Gmax/sum(Va) in ANC", ylab="Gmax/sum(Va) in UNC", sub=sig, axes=FALSE, xlim=c(0,1.1), ylim=c(0,1.1))
+axis(1)
+axis(2)
+null.line = data.frame(V1=c(-1,1.1), V2=c(-1,1.1))
 lines(x=null.line)
 
 
@@ -245,9 +249,11 @@ anc.va=unlist(anc.va)
 nov.va=unlist(nov.va)
 va.data = data.frame(ANC=anc.va, NOV=nov.va)
 
-sig = wilcox.test(x=va.data[,1], y=va.data[,2], paired=TRUE)$p.value
+sig = wilcox.test(x=va.data[,2], y=va.data[,1], paired=TRUE, alternative="t")$p.value
 
-plot(va.data, main="Size of G", xlab="Size in ANC env", ylab="Size in NOV env", sub=sig)
+plot(va.data, main="Size of G", xlab="Size in ANC env", ylab="Size in NOV env", sub=sig, axes=FALSE, xlim=c(0,0.7), ylim=c(0,0.7))
+axis(1)
+axis(2)
 null.line = data.frame(V1=c(-1,1), V2=c(-1,1))
 lines(x=null.line)
 
@@ -258,7 +264,7 @@ anc.h2 = list()
 anc.h2[[1]] = 0
 anc.h2[[2]] = 0
 nov.h2 = anc.h2
-has.NOV = grep("NOV", file.names)
+has.NOV = grep("UNC", file.names)
 for(i in 1:length(has.NOV)){
   idx = has.NOV[i]
   anc.data = input.data[[(idx-1)]]
@@ -275,60 +281,14 @@ h2.data = data.frame(ANC=anc.h2, NOV=nov.h2)
 h2.data = subset(h2.data, h2.data$ANC < 1)
 h2.data = subset(h2.data, h2.data$NOV < 1)
 
-sig = wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE)$p.value
+sig = wilcox.test(x=h2.data[,2], y=h2.data[,1], paired=TRUE, alternative="g")$p.value
 
-plot(h2.data, main="Diff in h2", xlab="h2 in ANC env", ylab="h2 in NOV env", sub=sig)
+plot(h2.data, main="Diff in h2", xlab="h2 in ANC env", ylab="h2 in NOV env", sub=sig, axes=FALSE, xlim=c(0,1), ylim=c(-0.1,1))
+axis(1)
+axis(2)
 null.line = data.frame(V1=c(-1,2), V2=c(-1,2))
 lines(x=null.line)
 
-#Greater is below null.line, less is above null.line
-wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="greater")
-wilcox.test(x=h2.data[,1], y=h2.data[,2], paired=TRUE, alternative="less")
-
-
-#Vector projection
-
-anc.project = list()
-anc.project[[1]] = 0
-anc.project[[2]] = 0
-nov.project = list()
-nov.project[[1]] = 0
-nov.project[[2]] = 0
-prj.table = data.frame(V1=0, V2=0, V3=0, V4=0, V5=0, V6=0, V7=0)
-#has.NOV already exists from comparison of C.matrices Gmax values
-has.NOV = grep("NOV", file.names)
-for(j in 1:7){
-  for(i in 1:length(has.NOV)){
-    idx = has.NOV[i]
-    pops = file.names[(idx-1):idx]
-    anc.idx = grep(pops[1], file.names)
-    nov.idx = grep(pops[2], file.names)
-    anc.mat = C.matrices[[anc.idx]]
-    nov.mat = C.matrices[[nov.idx]]
-    
-    if(length(anc.mat[,1])>=j){
-      anc.egn = eigen(anc.mat);
-      anc.bta = anc.egn$vectors[,j];
-      anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
-    }
-    if(length(anc.mat[,1])<j){
-      anc.project[[i]] = NA
-    }
-    if(length(nov.mat[,1])>=j){
-      nov.egn = eigen(nov.mat);
-      nov.bta = nov.egn$vectors[,j];
-      nov.project[[i]] = t(nov.bta) %*% anc.mat %*% nov.bta
-      nov.project[[i]] = nov.project[[i]]/sum(anc.egn$values)
-    }
-    if(length(nov.mat[,1])<j){
-      nov.project[[i]] = NA
-    }
-  }
-  prj.table[1:length(nov.project),j] = unlist(nov.project)
-}
-
-PRJ = rep("PRJ", times=length(prj.table[,1]))
-prj.table[,8] = PRJ
 
 #Distribution of variance across eigenvalues
 
@@ -372,32 +332,219 @@ for(i in 1:length(nov.values)){
 NOV = "NOV"
 nov.table[(1:length(nov.table[,1])),(length(nov.table[1,])+1)] = rep(NOV, times=length(nov.table[,1]))
 
+unc.values = nov.values
 
-colours = c("coral3", "peru", "sandybrown", "turquoise4", "aquamarine4", "lightseagreen")
-x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "")
-x.axis.ticks = c(0, 2, 5, 8, 11, 14, 17, 20, 24)
-boxplot(list(anc.values[[1]], nov.values[[1]], prj.table[,1],
-             anc.values[[2]], nov.values[[2]], prj.table[,2],
-             anc.values[[3]], nov.values[[3]], prj.table[,3],
-             anc.values[[4]], nov.values[[4]], prj.table[,4],
-             anc.values[[5]], nov.values[[5]], prj.table[,5],
-             anc.values[[6]], nov.values[[6]], prj.table[,6],
-             anc.values[[7]], nov.values[[7]], prj.table[,7]),
-        col=colours, xlab="Amount of total variation contributed", ylab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments",
-        frame.plot=FALSE, axes=FALSE)
-axis(1, at=x.axis.ticks, labels=x.axis.labels)
+x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "")
+boxplot(anc.values, boxwex=0.35, at=1:8-0.2, col="white", xlim=c(0,9), ylim=c(-0.2,1), ylab="Amount of total variation contributed", xlab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments", axes=FALSE)
+boxplot(unc.values, boxwex=0.35, at=1:8+0.2, col="grey50", axes=FALSE, add=TRUE)
+axis(1, at=0:9, labels=x.axis.labels)
 axis(2)
-legend(18, 0.9, legend=c("anc", "nov", "nov in anc"), bty="n")
 
-p.val = list()
-for(i in 1:7){
-  p.val[i] = t.test(x=na.omit(anc.values[[i]]), y=na.omit(prj.table[,i]), paired=TRUE)$p.value
-}
 
-k=1
-for(i in 1:length(p.val)){
-  if(p.val[i]<=0.05){
-    points(x=((i*3)+0.2), y=(quantile(prj.table[,i], na.rm=TRUE)[4]+0.1), pch="*", cex=2)
-    k=k+1
+
+
+
+anc.values = list()
+anc.values[[1]] = 0
+anc.values[[8]] = 0
+nov.values = list()
+nov.values[[1]] = 0
+nov.values[[8]] = 0
+has.NOV = grep("NOV", file.names)
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.mat = C.matrices[[(idx-1)]]
+  nov.mat = C.matrices[[idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.val = anc.val/length(anc.val)
+  
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.val = nov.val/length(nov.val)
+  
+  for(k in 1:length(anc.val)){
+    anc.values[[k]][i] = anc.val[k]
+    nov.values[[k]][i] = nov.val[k]
   }
 }
+
+anc.table = data.frame()
+for(i in 1:length(anc.values)){
+  anc.table[(1:length(anc.values[[i]])),i] = anc.values[[i]]
+}
+ANC = "ANC"
+anc.table[(1:length(anc.table[,1])),(length(anc.table[1,])+1)] = rep(ANC, times=length(anc.table[,1]))
+
+nov.table = data.frame()
+for(i in 1:length(nov.values)){
+  nov.table[(1:length(nov.values[[i]])),i] = nov.values[[i]]
+}
+NOV = "NOV"
+nov.table[(1:length(nov.table[,1])),(length(nov.table[1,])+1)] = rep(NOV, times=length(nov.table[,1]))
+
+
+x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "")
+boxplot(anc.values, boxwex=0.35, at=1:8-0.2, col="white", xlim=c(0,9), ylim=c(-0.2,1), ylab="Amount of total variation contributed", xlab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments", axes=FALSE)
+boxplot(nov.values, boxwex=0.35, at=1:8+0.2, col="grey50", axes=FALSE, add=TRUE)
+axis(1, at=0:9, labels=x.axis.labels)
+axis(2)
+
+
+
+#Vector projection
+
+
+anc.project = list()
+anc.project[[1]] = 0
+anc.project[[2]] = 0
+nov.project = list()
+nov.project[[1]] = 0
+nov.project[[2]] = 0
+prj.table = data.frame(V1=0, V2=0, V3=0, V4=0, V5=0, V6=0, V7=0)
+#has.NOV already exists from comparison of C.matrices Gmax values
+has.NOV = grep("NOV", file.names)
+for(j in 1:8){
+  for(i in 1:length(has.NOV)){
+    idx = has.NOV[i]
+    pops = file.names[(idx-1):idx]
+    anc.idx = grep(pops[1], file.names)
+    nov.idx = grep(pops[2], file.names)
+    anc.mat = C.matrices[[anc.idx]]
+    nov.mat = C.matrices[[nov.idx]]
+    
+    if(length(anc.mat[,1])>=j){
+      anc.egn = eigen(anc.mat);
+      anc.bta = anc.egn$vectors[,j];
+      anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
+    }
+    if(length(anc.mat[,1])<j){
+      anc.project[[i]] = NA
+    }
+    if(length(nov.mat[,1])>=j){
+      nov.egn = eigen(nov.mat);
+      nov.bta = nov.egn$vectors[,j];
+      nov.project[[i]] = t(nov.bta) %*% anc.mat %*% nov.bta
+      nov.project[[i]] = nov.project[[i]]/sum(anc.egn$values)
+    }
+    if(length(nov.mat[,1])<j){
+      nov.project[[i]] = NA
+    }
+  }
+  prj.table[1:length(nov.project),j] = unlist(nov.project)
+}
+
+nov.prj = prj.table
+
+anc.values = list()
+anc.values[[1]] = 0
+anc.values[[8]] = 0
+nov.values = list()
+nov.values[[1]] = 0
+nov.values[[8]] = 0
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.mat = C.matrices[[(idx-1)]]
+  nov.mat = C.matrices[[idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.val = anc.val/length(anc.val)
+  
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.val = nov.val/length(nov.val)
+  
+  for(k in 1:length(anc.val)){
+    anc.values[[k]][i] = anc.val[k]
+    nov.values[[k]][i] = nov.val[k]
+  }
+}
+
+x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "")
+boxplot(anc.values, boxwex=0.35, at=1:8-0.2, col="white", xlim=c(0,9), ylim=c(-0.2,1), ylab="Amount of total variation contributed", xlab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments", axes=FALSE)
+boxplot(nov.prj, boxwex=0.35, at=1:8+0.2, col="grey50", axes=FALSE, add=TRUE)
+axis(1, at=0:9, labels=x.axis.labels)
+axis(2)
+
+
+wilcox.test(nov.prj$V1, anc.values[[1]], paired=T, alternative="l")
+t.test(x=na.omit(nov.prj[,1]), y=na.omit(anc.values[[1]]), paired=TRUE, alternative="l")
+
+anc.project = list()
+anc.project[[1]] = 0
+anc.project[[2]] = 0
+nov.project = list()
+nov.project[[1]] = 0
+nov.project[[2]] = 0
+prj.table = data.frame(V1=0, V2=0, V3=0, V4=0, V5=0, V6=0, V7=0)
+#has.NOV already exists from comparison of C.matrices Gmax values
+has.NOV = grep("UNC", file.names)
+for(j in 1:8){
+  for(i in 1:length(has.NOV)){
+    idx = has.NOV[i]
+    pops = file.names[(idx-1):idx]
+    anc.idx = grep(pops[1], file.names)
+    nov.idx = grep(pops[2], file.names)
+    anc.mat = C.matrices[[anc.idx]]
+    nov.mat = C.matrices[[nov.idx]]
+    
+    if(length(anc.mat[,1])>=j){
+      anc.egn = eigen(anc.mat);
+      anc.bta = anc.egn$vectors[,j];
+      anc.project[[i]] = t(anc.bta) %*% anc.mat %*% anc.bta
+    }
+    if(length(anc.mat[,1])<j){
+      anc.project[[i]] = NA
+    }
+    if(length(nov.mat[,1])>=j){
+      nov.egn = eigen(nov.mat);
+      nov.bta = nov.egn$vectors[,j];
+      nov.project[[i]] = t(nov.bta) %*% anc.mat %*% nov.bta
+      nov.project[[i]] = nov.project[[i]]/sum(anc.egn$values)
+    }
+    if(length(nov.mat[,1])<j){
+      nov.project[[i]] = NA
+    }
+  }
+  prj.table[1:length(nov.project),j] = unlist(nov.project)
+}
+
+unc.prj = prj.table
+
+anc.values = list()
+anc.values[[1]] = 0
+anc.values[[8]] = 0
+nov.values = list()
+nov.values[[1]] = 0
+nov.values[[8]] = 0
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  anc.mat = C.matrices[[(idx-1)]]
+  nov.mat = C.matrices[[idx]]
+  
+  anc.egn = eigen(anc.mat)
+  anc.val = anc.egn$values
+  anc.val = anc.val/length(anc.val)
+  
+  nov.egn = eigen(nov.mat)
+  nov.val = nov.egn$values
+  nov.val = nov.val/length(nov.val)
+  
+  for(k in 1:length(anc.val)){
+    anc.values[[k]][i] = anc.val[k]
+    nov.values[[k]][i] = nov.val[k]
+  }
+}
+
+
+
+x.axis.labels = c("", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "")
+boxplot(anc.values, boxwex=0.35, at=1:8-0.2, col="white", xlim=c(0,9), ylim=c(-0.2,1), ylab="Amount of total variation contributed", xlab="Eigenvalues", main="Comparison of eigenvalue variance distribution between environments", axes=FALSE)
+boxplot(unc.prj, boxwex=0.35, at=1:8+0.2, col="grey50", axes=FALSE, add=TRUE)
+axis(1, at=0:9, labels=x.axis.labels)
+axis(2)
+
+wilcox.test(unc.prj$V1, anc.values[[1]], paired=T, alternative="l")
+t.test(x=na.omit(unc.prj[,1]), y=na.omit(anc.values[[1]]), paired=TRUE, alternative="t")
