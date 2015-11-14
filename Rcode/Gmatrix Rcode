@@ -548,3 +548,40 @@ axis(2)
 
 wilcox.test(unc.prj$V1, anc.values[[1]], paired=T, alternative="l")
 t.test(x=na.omit(unc.prj[,1]), y=na.omit(anc.values[[1]]), paired=TRUE, alternative="t")
+
+
+
+# Tensor Analysis
+D.matrix = list()
+D.matrix[[1]] = 0
+D.matrix[[2]] = 0
+Eigentensor = data.frame(V1=NA, V2=NA, V3=NA, V4=NA, V5=NA, V6=NA, V7=NA)
+has.NOV = grep("NOV", file.names)
+
+for(i in 1:length(has.NOV)){
+  idx = has.NOV[i]
+  pops = file.names[(idx-1):idx]
+  anc.idx = grep(pops[1], file.names)
+  nov.idx = grep(pops[2], file.names)
+  anc.mat = C.matrices[[anc.idx]]
+  nov.mat = C.matrices[[nov.idx]]
+  D.matrix[[i]] = anc.mat - nov.mat
+  Eigentensor[i,(1:length(D.matrix[[i]][1,]))] = eigen(D.matrix[[i]])$values
+}
+
+adj.Eigentensor = Eigentensor - 1
+
+boxplot(adj.Eigentensor)
+
+#Two-sided and less than differ by non-sig/sig of E1 respectively
+results = list()
+for(i in 1:7){
+  results[i] = wilcox.test(adj.Eigentensor[,i], alternative="l")$p.value
+}
+results = unlist(results)
+
+for(i in 1:length(results)){
+  if(results[i] <= 0.05){
+    points(x=i, y=1, pch="*", cex=2)
+  }
+}
