@@ -571,7 +571,7 @@ for(i in 1:length(has.NOV)){
 
 adj.Eigentensor = Eigentensor - 1
 
-boxplot(adj.Eigentensor)
+boxplot(Eigentensor, xlab="PC", ylab="Eigenvalue")
 
 #Two-sided and less than differ by non-sig/sig of E1 respectively
 results = list()
@@ -582,6 +582,6 @@ results = unlist(results)
 
 for(i in 1:length(results)){
   if(results[i] <= 0.05){
-    points(x=i, y=1, pch="*", cex=2)
+    points(x=i, y=2, pch="*", cex=2)
   }
 }
